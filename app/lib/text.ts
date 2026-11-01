@@ -33,6 +33,30 @@ export function postalPlain(text: string) {
     .trim()
 }
 
+function postalText(value: string) {
+  return value.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').replace(/[.,]/g, '').toUpperCase()
+}
+
+export function postalHtml(html: string) {
+  if (typeof document === 'undefined') return plainToHtml(postalPlain(htmlToPlain(html)))
+  const root = document.createElement('div')
+  root.innerHTML = html || ''
+  const blocks = [...root.querySelectorAll('p, li, h1, h2, h3')]
+  const targets: ParentNode[] = blocks.length ? blocks : [root]
+  for (const block of targets) {
+    const nodes: Text[] = []
+    const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text)
+    for (const node of nodes) node.data = postalText(node.data)
+    const filled = nodes.filter(node => node.data.length)
+    if (!filled.length) continue
+    filled[0]!.data = filled[0]!.data.replace(/^\s+/, '')
+    const last = filled[filled.length - 1]!
+    last.data = last.data.replace(/\s+$/, '')
+  }
+  return root.innerHTML || '<p></p>'
+}
+
 export function isEmptyHtml(html: string) {
   return !htmlToPlain(html).trim()
 }

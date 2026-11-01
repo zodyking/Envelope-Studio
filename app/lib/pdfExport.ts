@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib'
 import { PT } from './constants'
 import { addressFrame, isLetter, pageSize, printsAddress } from './geometry'
-import { plainToHtml, postalPlain, htmlToPlain, safeHex } from './text'
+import { htmlToPlain, plainToHtml, postalHtml, postalPlain, safeHex } from './text'
 import type { Align, Box, MailDoc, Role, SurfaceId, TextStyle } from './types'
 
 interface Run {
@@ -187,11 +187,12 @@ function dataBytes(src: string) {
 }
 
 function fieldHtml(doc: MailDoc, role: Role, recipientPlain: string | null) {
-  if (role === 'recipient' && recipientPlain != null) {
-    return plainToHtml(doc.sortingAssist ? postalPlain(recipientPlain) : recipientPlain)
-  }
-  if (role === 'recipient' && doc.sortingAssist) return plainToHtml(postalPlain(htmlToPlain(doc.recipient.html)))
-  return doc[role].html
+  if (role !== 'recipient') return doc.sender.html
+  const own = htmlToPlain(doc.recipient.html)
+  const foreign = recipientPlain != null && recipientPlain !== own
+  if (foreign) return plainToHtml(doc.sortingAssist ? postalPlain(recipientPlain) : recipientPlain)
+  if (doc.sortingAssist) return postalHtml(doc.recipient.html)
+  return doc.recipient.html
 }
 
 async function drawPage(pdf: PDFDocument, fonts: Map<string, PDFFont>, doc: MailDoc, surface: SurfaceId, recipientPlainText: string | null) {

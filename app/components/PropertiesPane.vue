@@ -24,7 +24,7 @@ const { doc, selection, layers, paneOpen, warnings } = studio
       <section class="form-section">
         <label class="sort-toggle">
           <input type="checkbox" :checked="doc.sortingAssist" @change="studio.edit(() => { doc.sortingAssist = ($event.target as HTMLInputElement).checked })">
-          <span><strong>USPS sorting assist</strong><small>The page shows the recipient in clear uppercase. The text you type is kept.</small></span>
+          <span><strong>USPS sorting assist</strong><small>The page shows the recipient in clear uppercase. Bold, color, and the text you type are kept.</small></span>
         </label>
         <div class="sort-status" aria-live="polite">
           <span v-if="!warnings.length" class="ok">No layout warnings. USPS has not verified this address.</span>

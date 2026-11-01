@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MM } from '~/lib/constants'
 import { flapPath } from '~/lib/flaps'
 import { cssBox, hasWindow, isLetter, pageSize, showsAddress } from '~/lib/geometry'
-import { isEmptyHtml, plainToHtml, textCss } from '~/lib/text'
+import { htmlToPlain, isEmptyHtml, plainToHtml, postalHtml, postalPlain, textCss } from '~/lib/text'
 import { useStudio } from '~/composables/useStudio'
 import type { Box, Role, SurfaceId } from '~/lib/types'
 
@@ -44,10 +44,12 @@ const folds = computed(() => {
 })
 
 function roleHtml(role: Role) {
-  if (role === 'recipient' && (props.recipientPlain != null || (doc.value.sortingAssist && editingId.value !== 'recipient'))) {
-    return plainToHtml(studio.recipientPreview(props.recipientPlain ?? null))
-  }
-  return doc.value[role].html
+  if (role !== 'recipient') return doc.value.sender.html
+  const own = htmlToPlain(doc.value.recipient.html)
+  const foreign = props.recipientPlain != null && props.recipientPlain !== own
+  if (foreign) return plainToHtml(doc.value.sortingAssist ? postalPlain(props.recipientPlain) : props.recipientPlain)
+  if (doc.value.sortingAssist && editingId.value !== 'recipient') return postalHtml(doc.value.recipient.html)
+  return doc.value.recipient.html
 }
 
 function empty(html: string) {

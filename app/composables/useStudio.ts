@@ -46,6 +46,17 @@ function hydrate(json: string) {
   return doc
 }
 
+function clipboardImage(data: DataTransfer) {
+  const named = [...data.files].find(file => file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/i.test(file.name))
+  if (named) return named
+  for (const item of data.items) {
+    if (item.kind !== 'file' || !item.type.startsWith('image/')) continue
+    const file = item.getAsFile()
+    if (file) return file
+  }
+  return null
+}
+
 function findItem(doc: MailDoc, id: string) {
   for (const surface of Object.values(doc.surfaces)) {
     const item = surface.items.find(entry => entry.id === id)
@@ -412,11 +423,18 @@ function buildStudio() {
   }
 
   async function addImage(file: File) {
-    if (!/^image\/(png|jpeg)$/.test(file.type) || file.size > 8_000_000) {
+    const allowed = !file.type || /^image\/(png|jpe?g|gif|webp|bmp)$/.test(file.type)
+    if (!allowed || file.size > 8_000_000) {
       toast('Choose a PNG or JPG under 8 MB')
       return
     }
-    const scaled = await downscale(await fileToData(file), 2200)
+    let scaled: { url: string; width: number; height: number }
+    try {
+      scaled = await downscale(await fileToData(file), 2200)
+    } catch {
+      toast('Could not read that image')
+      return
+    }
     snapshot()
     const aspect = scaled.width / Math.max(1, scaled.height)
     const height = 26
@@ -424,7 +442,7 @@ function buildStudio() {
       id: uid('i'),
       type: 'image',
       src: scaled.url,
-      name: file.name,
+      name: file.name || 'Pasted image',
       frame: { x: 15, y: 13, w: Math.min(95, Math.max(16, height * aspect)), h: height },
     }
     doc.value.surfaces[doc.value.view].items.push(item)
@@ -722,6 +740,66 @@ function buildStudio() {
     persist()
   }
 
+  function pastedTextBox(content: string) {
+    snapshot()
+    const page = pageSize(doc.value)
+    const lines = content.replace(/\r\n/g, '\n').split('\n')
+    const longest = lines.reduce((max, line) => Math.max(max, line.trim().length), 1)
+    const width = Math.min(page.w - 24, Math.max(48, Math.min(140, longest * 2.4 + 4)))
+    const charsPerLine = Math.max(8, Math.floor((width - 2) / 2.4))
+    const wrapped = lines.reduce((count, line) => count + Math.max(1, Math.ceil(Math.max(line.length, 1) / charsPerLine)), 0)
+    const lineMm = 12 * (25.4 / 72) * 1.3
+    const height = Math.min(page.h - 16, Math.max(lineMm + 1, wrapped * lineMm + 1))
+    const count = doc.value.surfaces[doc.value.view].items.length
+    const item = makeText(content, {
+      x: Math.min(page.w - width - 8, 16 + (count % 6) * 5),
+      y: Math.min(page.h - height - 8, 22 + (count % 6) * 5),
+      w: width,
+      h: height,
+    }, 12, false)
+    doc.value.surfaces[doc.value.view].items.push(item)
+    selection.value = item.id
+    editingId.value = null
+    persist()
+  }
+
+  function insertClipboardText(text: string) {
+    const target = textTarget(doc.value, selection.value)
+    if (!target) return false
+    snapshot()
+    const current = htmlToPlain(target.html).trim()
+    const replace = !current || current === 'Your text' || current === 'Text'
+    target.setHtml(replace ? plainToHtml(text) : `${target.html}${plainToHtml(text)}`)
+    persist()
+    return true
+  }
+
+  function onPaste(event: ClipboardEvent) {
+    if (dialog.value || backstage.value) return
+    const host = event.target instanceof Element ? event.target : null
+    if (host?.closest('input, textarea, select')) return
+    const data = event.clipboardData
+    if (!data) return
+    const image = clipboardImage(data)
+    if (image) {
+      event.preventDefault()
+      event.stopPropagation()
+      if (editingId.value) endEdit()
+      void addImage(image)
+      return
+    }
+    const text = data.getData('text/plain')
+    if (!text.trim()) return
+    if (text.length > 50_000) {
+      event.preventDefault()
+      toast('That clipboard text is too long')
+      return
+    }
+    if (host?.closest('.ProseMirror')) return
+    event.preventDefault()
+    if (!insertClipboardText(text)) pastedTextBox(text)
+  }
+
   function onKey(event: KeyboardEvent) {
     const typing = document.activeElement?.matches('input, textarea, select, [contenteditable="true"]')
     const inEditor = !!document.activeElement?.closest('.ProseMirror')
@@ -785,6 +863,7 @@ function buildStudio() {
   if (typeof window !== 'undefined' && !keysBound) {
     keysBound = true
     window.addEventListener('keydown', onKey)
+    window.addEventListener('paste', onPaste, true)
     window.addEventListener('afterprint', () => {
       printJob.value = []
       if (dialog.value === 'print') dialog.value = null
