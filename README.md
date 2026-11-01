@@ -3,7 +3,7 @@
 Design envelopes and the letters that go inside them. A regular envelope prints as the envelope. A one-window or two-window envelope prints the letter at actual size, so the address shows through the window.
 
 <p align="center">
-  <a href="https://github.com/zodyking/Envelope-Studio/releases/latest/download/Envelope-Studio.exe">
+  <a href="https://github.com/zodyking/Envelope-Studio/releases/latest/download/E-Studio.exe">
     <img src="download.png" width="720" alt="Download for Windows">
   </a>
 </p>
