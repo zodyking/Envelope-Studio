@@ -127,3 +127,30 @@ ipcMain.handle('save-auto', (_event, content) => {
   fs.mkdirSync(path.dirname(projectFile()), { recursive: true })
   fs.writeFileSync(projectFile(), content)
 })
+
+ipcMain.handle('list-printers', async (event) => {
+  const printers = await event.sender.getPrintersAsync()
+  return printers.map(printer => ({
+    name: printer.name,
+    displayName: printer.displayName || printer.name,
+  }))
+})
+
+ipcMain.handle('print-document', (event, options) => {
+  const copies = Math.max(1, Math.min(99, Math.round(Number(options?.copies) || 1)))
+  const width = Math.max(1000, Math.round(Number(options?.widthMicrons) || 215900))
+  const height = Math.max(1000, Math.round(Number(options?.heightMicrons) || 279400))
+  return new Promise((resolve) => {
+    event.sender.print({
+      silent: true,
+      printBackground: true,
+      deviceName: options?.deviceName || '',
+      copies,
+      color: true,
+      margins: { marginType: 'none' },
+      pageSize: { width, height },
+    }, (success, failureReason) => {
+      resolve({ success: !!success, failureReason: failureReason || '' })
+    })
+  })
+})

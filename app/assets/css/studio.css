@@ -241,6 +241,17 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px }
 .drawer { width: min(720px, 100%); max-height: min(88vh, 860px); background: #fff; border-radius: 8px; box-shadow: 0 25px 60px rgba(0, 0, 0, .28); display: flex; flex-direction: column; overflow: hidden }
 .drawer.wide { width: min(920px, 100%) }
+.print-desk { width: min(1080px, 100%); height: min(86vh, 780px) }
+.print-desk-body { display: grid; grid-template-columns: minmax(0, 1fr) 260px; min-height: 0; flex: 1 }
+.print-stage { min-height: 0; overflow: auto; background: #f3f2f1; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px }
+.print-figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px }
+.print-figure figcaption { color: var(--muted); font-size: 12px }
+.print-frame { position: relative }
+.print-page { position: absolute; left: 0; top: 0; transform-origin: top left; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .18) }
+.print-side { min-height: 0; overflow: auto; padding: 8px 16px 16px; border-left: 1px solid var(--line); background: #fff }
+.print-side select, .print-side input { width: 100%; min-height: 32px; margin-top: 4px; padding: 4px 8px; border: 1px solid var(--input); border-radius: 4px; background: #fff }
+.print-meta, .print-system { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45 }
+.print-status { margin: 12px 0 0; color: var(--warn); font-size: 12px; line-height: 1.45 }
 .drawer-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center }
 .drawer-head h2 { font-size: 20px; font-weight: 600; margin: 0 }
 .close { width: 32px; height: 32px; border: 0; border-radius: 2px; background: #fff; font-size: 20px }
@@ -302,6 +313,10 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
   .contextbar, .statusbar { flex-wrap: wrap; height: auto }
   .help-strip { flex-direction: column }
   .rb-lg, .ribbon-tab, .file-tab, .qat-btn, .bs-link { min-height: 44px }
+  .print-desk { height: auto; max-height: min(92vh, 860px) }
+  .print-desk-body { grid-template-columns: 1fr }
+  .print-stage { max-height: 48vh }
+  .print-side { border-left: 0; border-top: 1px solid var(--line) }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
 @media print {

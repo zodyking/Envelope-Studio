@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
     <svg v-if="flap" class="flap-guides" :viewBox="`0 0 ${page.w} ${page.h}`" aria-hidden="true">
       <path :d="flap" />
     </svg>
-    <div v-if="surface === 'letter' || surface === 'letterBack'" class="side-badge">{{ surface === 'letter' ? 'Letter' : 'Letter back' }}</div>
+    <div v-if="!printMode && (surface === 'letter' || surface === 'letterBack')" class="side-badge">{{ surface === 'letter' ? 'Letter' : 'Letter back' }}</div>
     <div v-for="fold in folds" :key="fold.y" class="fold-guide" :style="{ top: fold.y + 'mm' }"><small>{{ fold.label }}</small></div>
 
     <div

@@ -42,6 +42,7 @@ function sheetStyle(page: PrintPage) {
     <SetupDialog v-if="dialog === 'setup'" />
     <PostageDialog v-if="dialog === 'postage'" />
     <BatchDialog v-if="dialog === 'batch'" />
+    <PrintDialog v-if="dialog === 'print'" />
     <div v-if="toastText" class="toast visible" role="status">{{ toastText }}</div>
   </div>
   <div id="printHost" aria-hidden="true">
