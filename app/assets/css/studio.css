@@ -209,13 +209,22 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .fold-guide { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(15, 108, 189, .55); pointer-events: none; z-index: 1 }
 .fold-guide small { position: absolute; left: 8mm; top: 1.5mm; color: #0F548C; font-size: 8px; background: rgba(255, 255, 255, .92); padding: 1mm 2mm; white-space: nowrap }
 
-.contextbar { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 12px; background: #fff; border-top: 1px solid var(--line) }
-.context-left, .context-right { display: flex; align-items: center; gap: 8px; min-width: 0 }
-.selection-icon { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--line-strong); color: var(--accent) }
-.context-left strong { display: block; font-size: 12px }
-.context-left span { display: block; font-size: 11px; color: var(--muted) }
-.context-right label { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 600 }
-.context-right input { width: 64px; height: 26px; padding: 0 6px; border: 1px solid var(--input); border-radius: 2px }
+.contextbar { height: 42px; min-height: 42px; display: flex; align-items: center; gap: 12px; padding: 0 12px; background: #fff; border-top: 1px solid var(--line) }
+.context-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600 }
+.context-metrics, .context-actions { display: flex; align-items: center; gap: 8px; flex: none }
+.context-actions { margin-left: auto }
+.context-metrics label { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 600 }
+.context-metrics input { width: 64px; height: 28px; padding: 0 6px; border: 1px solid var(--input); border-radius: 2px }
+.snap-guide { position: absolute; pointer-events: none; z-index: 5; background: var(--accent) }
+.snap-guide.is-x { top: 0; bottom: 0; width: 1px }
+.snap-guide.is-y { left: 0; right: 0; height: 1px }
+.obj-menu { position: fixed; z-index: 30; min-width: 196px; max-width: 240px; padding: 4px; background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow) }
+.obj-menu.flyout { position: absolute; left: calc(100% + 4px); top: 0; z-index: 31 }
+.menu-label { margin: 4px 8px 2px; color: var(--muted); font-size: 11px; font-weight: 600 }
+.obj-menu > button, .peer-name { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 0 8px; border: 0; border-radius: 2px; background: transparent; text-align: left; font-weight: 400 }
+.obj-menu > button:hover, .peer-name:hover, .menu-peer:hover > .peer-name { background: var(--hover) }
+.menu-peer { position: relative }
+.peer-name { color: var(--ink) }
 .unit { color: var(--muted); font-size: 11px }
 .button { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--input); border-radius: 4px; background: #fff; font-weight: 600 }
 .button:hover { background: var(--hover) }

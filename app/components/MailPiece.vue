@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MM } from '~/lib/constants'
 import { flapPath } from '~/lib/flaps'
+import { snapMove } from '~/lib/align'
 import { cssBox, hasWindow, isLetter, letterFold, pageSize, showsAddress } from '~/lib/geometry'
 import { htmlToPlain, isEmptyHtml, plainToHtml, postalHtml, postalPlain, textCss } from '~/lib/text'
 import { useStudio } from '~/composables/useStudio'
@@ -25,6 +26,7 @@ const surface = computed(() => props.surface || doc.value.view)
 const page = computed(() => pageSize(doc.value, surface.value))
 const items = computed(() => doc.value.surfaces[surface.value].items)
 const drag = ref<null | { id: string; mode: 'move' | 'resize'; dir: string; frame: Box; mx: number; my: number }>(null)
+const guides = ref<{ x: number | null; y: number | null }>({ x: null, y: null })
 const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 const roles: Role[] = ['sender', 'recipient']
 
@@ -74,12 +76,13 @@ function onMove(event: PointerEvent) {
   const dy = (event.clientY - current.my) / (scale.value * MM)
   const snap = (value: number) => Math.round(value * 4) / 4
   if (current.mode === 'move') {
-    studio.setFrame(current.id, {
-      ...current.frame,
-      x: snap(current.frame.x + dx),
-      y: snap(current.frame.y + dy),
-    }, true)
+    const raw = { ...current.frame, x: current.frame.x + dx, y: current.frame.y + dy }
+    const peers = studio.surfaceObjects(current.id).map(item => item.frame)
+    const snapped = snapMove(raw, peers, page.value)
+    guides.value = { x: snapped.guideX, y: snapped.guideY }
+    studio.setFrame(current.id, { ...raw, x: snapped.x, y: snapped.y }, true)
   } else {
+    guides.value = { x: null, y: null }
     studio.resizeBy(current.frame, snap(dx), snap(dy), current.dir, current.id)
   }
 }
@@ -87,7 +90,16 @@ function onMove(event: PointerEvent) {
 function onUp() {
   if (!drag.value) return
   drag.value = null
+  guides.value = { x: null, y: null }
   studio.endGesture()
+}
+
+function onContext(event: MouseEvent, id: string) {
+  if (!props.interactive) return
+  if (event.target instanceof Element && event.target.closest('.ProseMirror, input, textarea')) return
+  event.preventDefault()
+  event.stopPropagation()
+  studio.openObjectMenu(id, event.clientX, event.clientY)
 }
 
 function onPaper(event: PointerEvent) {
@@ -124,6 +136,8 @@ onBeforeUnmount(() => {
     </svg>
     <div v-if="!printMode && (surface === 'letter' || surface === 'letterBack')" class="side-badge">{{ surface === 'letter' ? 'Letter' : 'Letter back' }}</div>
     <div v-for="fold in folds" :key="fold.y" class="fold-guide" :style="{ top: fold.y + 'mm' }"><small>{{ fold.label }}</small></div>
+    <div v-if="interactive && guides.x != null" class="snap-guide is-x" :style="{ left: guides.x + 'mm' }" />
+    <div v-if="interactive && guides.y != null" class="snap-guide is-y" :style="{ top: guides.y + 'mm' }" />
 
     <div
       v-for="role in roles"
@@ -134,6 +148,7 @@ onBeforeUnmount(() => {
       :style="cssBox(doc.windows[role])"
       :tabindex="interactive ? 0 : undefined"
       @pointerdown="start($event, 'window:' + role, 'move')"
+      @contextmenu="onContext($event, 'window:' + role)"
     >
       <template v-if="selected('window:' + role)">
         <i v-for="handle in handles" :key="handle" class="handle" :class="handle" @pointerdown="start($event, 'window:' + role, 'resize', handle)" />
@@ -149,6 +164,7 @@ onBeforeUnmount(() => {
       :tabindex="interactive ? 0 : undefined"
       :aria-label="item.type"
       @pointerdown="start($event, item.id, 'move')"
+      @contextmenu="onContext($event, item.id)"
       @dblclick.stop="item.type === 'text' ? edit(item.id) : undefined"
     >
       <img v-if="item.type === 'image' && item.src" :src="item.src" alt="" draggable="false">
@@ -174,6 +190,7 @@ onBeforeUnmount(() => {
       :tabindex="interactive ? 0 : undefined"
       :aria-label="role === 'recipient' ? 'Recipient' : 'Return address'"
       @pointerdown="start($event, role, 'move')"
+      @contextmenu="onContext($event, role)"
       @dblclick.stop="edit(role)"
     >
       <InlineEditor v-if="interactive && editingId === role" :item-id="role" :html="doc[role].html" />
@@ -192,6 +209,7 @@ onBeforeUnmount(() => {
       :tabindex="interactive ? 0 : undefined"
       aria-label="Postage"
       @pointerdown="start($event, 'stamp', 'move')"
+      @contextmenu="onContext($event, 'stamp')"
     >
       <img :src="doc.stamp.src" alt="Postage" draggable="false">
       <template v-if="selected('stamp')">
