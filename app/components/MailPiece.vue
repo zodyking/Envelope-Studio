@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MM } from '~/lib/constants'
+import { flapPath } from '~/lib/flaps'
 import { cssBox, hasWindow, isLetter, pageSize, showsAddress } from '~/lib/geometry'
 import { isEmptyHtml, plainToHtml, textCss } from '~/lib/text'
 import { useStudio } from '~/composables/useStudio'
@@ -26,6 +27,11 @@ const items = computed(() => doc.value.surfaces[surface.value].items)
 const drag = ref<null | { id: string; mode: 'move' | 'resize'; dir: string; frame: Box; mx: number; my: number }>(null)
 const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 const roles: Role[] = ['sender', 'recipient']
+
+const flap = computed(() => {
+  if (surface.value !== 'back' || props.printMode) return ''
+  return flapPath(page.value.w, page.value.h, doc.value.flap || 'commercial')
+})
 
 const folds = computed(() => {
   if (!isLetter(surface.value)) return []
@@ -114,7 +120,10 @@ onBeforeUnmount(() => {
     @pointerdown="onPaper"
   >
     <div v-if="surface === 'envelope'" class="safety-outline" />
-    <div v-if="surface !== 'envelope'" class="side-badge">{{ surface === 'back' ? 'Envelope back' : surface === 'letter' ? 'Letter' : 'Letter back' }}</div>
+    <svg v-if="flap" class="flap-guides" :viewBox="`0 0 ${page.w} ${page.h}`" aria-hidden="true">
+      <path :d="flap" />
+    </svg>
+    <div v-if="surface === 'letter' || surface === 'letterBack'" class="side-badge">{{ surface === 'letter' ? 'Letter' : 'Letter back' }}</div>
     <div v-for="fold in folds" :key="fold.y" class="fold-guide" :style="{ top: fold.y + 'mm' }"><small>{{ fold.label }}</small></div>
 
     <div

@@ -48,6 +48,47 @@ function trim(mask: Uint8Array, width: number, x0: number, y0: number, x1: numbe
   return { x0: minX, y0: minY, x1: maxX + 1, y1: maxY + 1 }
 }
 
+/** A short line at the top of an Orange Mailer page is the date and title, not the stamp. */
+function headerCut(row: Float64Array, pxPerMmY: number) {
+  const limit = Math.min(row.length, Math.round(45 * pxPerMmY))
+  const minGap = Math.max(2, Math.round(3 * pxPerMmY))
+  const maxHead = Math.round(8 * pxPerMmY)
+  let inkStart = -1
+  let lastInk = -1
+  let low = 0
+  for (let y = 0; y < limit; y++) {
+    if ((row[y] ?? 0) > 0.004) {
+      if (inkStart < 0) inkStart = y
+      lastInk = y
+      low = 0
+    } else if (inkStart >= 0) {
+      low++
+      if (low >= minGap) return lastInk - inkStart + 1 <= maxHead ? lastInk + 1 : 0
+    }
+  }
+  return 0
+}
+
+function unionBox(boxes: NormBox[]): NormBox {
+  const x = Math.min(...boxes.map(box => box.x))
+  const y = Math.min(...boxes.map(box => box.y))
+  const right = Math.max(...boxes.map(box => box.x + box.w))
+  const bottom = Math.max(...boxes.map(box => box.y + box.h))
+  return { x, y, w: right - x, h: bottom - y }
+}
+
+function sameIndicium(a: NormBox, b: NormBox, pageWmm: number, pageHmm: number) {
+  const gapX = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w)) * pageWmm
+  const gapY = Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h)) * pageHmm
+  const overlapY = (Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) * pageHmm
+  const overlapX = (Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * pageWmm
+  const taller = Math.max(a.h, b.h) * pageHmm
+  const shorter = Math.min(a.h, b.h) * pageHmm
+  if (overlapY > 6 && gapX < 20 && taller > shorter * 1.25) return true
+  if (overlapX > 8 && gapY < 6) return true
+  return false
+}
+
 function overlaps(a: NormBox, b: NormBox) {
   const x = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
   const y = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
@@ -92,6 +133,11 @@ export function detectStampBoxes(
     row[y] = count / width
   }
   smooth(row)
+  const cut = headerCut(row, pxPerMmY)
+  if (cut > 0) {
+    mask.fill(0, 0, cut * width)
+    row.fill(0, 0, cut)
+  }
   const bands = contentSpans(row, gapY, 0.012)
   const boxes: NormBox[] = []
 
@@ -110,7 +156,7 @@ export function detectStampBoxes(
       const padX = 1.2 * pxPerMmX
       const padY = 1.2 * pxPerMmY
       const x0 = Math.max(0, ink.x0 - padX)
-      const y0 = Math.max(0, ink.y0 - padY)
+      const y0 = Math.max(cut, ink.y0 - padY)
       const x1 = Math.min(width, ink.x1 + padX)
       const y1 = Math.min(height, ink.y1 + padY)
       const wMM = (x1 - x0) / pxPerMmX
@@ -132,4 +178,55 @@ export function detectStampBoxes(
     if (!unique.some(other => overlaps(other, box))) unique.push(box)
   }
   return unique
+}
+
+export interface StampOffer {
+  id: string
+  kind: 'barcode' | 'whole'
+  label: string
+  box: NormBox
+}
+
+/** Barcode keeps the taller crop. Whole stamp joins the mark beside it and the lines under the code. */
+export function stampOffers(boxes: NormBox[], pageWmm: number, pageHmm: number): StampOffer[] {
+  const pending = boxes.map(box => ({ box, used: false }))
+  const clusters: NormBox[][] = []
+  for (const item of pending) {
+    if (item.used) continue
+    const cluster = [item.box]
+    item.used = true
+    let grew = true
+    while (grew) {
+      grew = false
+      for (const other of pending) {
+        if (other.used) continue
+        if (cluster.some(box => sameIndicium(box, other.box, pageWmm, pageHmm))) {
+          cluster.push(other.box)
+          other.used = true
+          grew = true
+        }
+      }
+    }
+    clusters.push(cluster)
+  }
+  clusters.sort((a, b) => unionBox(a).y - unionBox(b).y || unionBox(a).x - unionBox(b).x)
+  const many = clusters.length > 1
+  const offers: StampOffer[] = []
+  clusters.forEach((cluster, index) => {
+    const barcode = cluster.slice().sort((a, b) => (b.h - a.h) || (b.x - a.x))[0]
+    if (!barcode) return
+    if (cluster.length === 1) {
+      offers.push({
+        id: `${index}-stamp`,
+        kind: 'barcode',
+        label: many ? `Stamp ${index + 1}` : 'Stamp',
+        box: barcode,
+      })
+      return
+    }
+    const prefix = many ? `${index + 1} · ` : ''
+    offers.push({ id: `${index}-barcode`, kind: 'barcode', label: `${prefix}Barcode`, box: barcode })
+    offers.push({ id: `${index}-whole`, kind: 'whole', label: `${prefix}Whole stamp`, box: unionBox(cluster) })
+  })
+  return offers
 }

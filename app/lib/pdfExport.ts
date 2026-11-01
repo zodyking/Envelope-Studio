@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib'
 import { PT } from './constants'
-import { addressFrame, isLetter, pageSize, showsAddress } from './geometry'
+import { addressFrame, isLetter, pageSize, printsAddress } from './geometry'
 import { plainToHtml, postalPlain, htmlToPlain, safeHex } from './text'
 import type { Align, Box, MailDoc, Role, SurfaceId, TextStyle } from './types'
 
@@ -273,7 +273,7 @@ async function drawPage(pdf: PDFDocument, fonts: Map<string, PDFFont>, doc: Mail
   }
 
   for (const role of ['sender', 'recipient'] as Role[]) {
-    if (!showsAddress(doc, role, surface)) continue
+    if (!printsAddress(doc, role, surface)) continue
     await drawRuns(fieldHtml(doc, role, recipientPlainText), doc[role].style, addressFrame(doc, role, surface))
   }
 

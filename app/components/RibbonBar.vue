@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ENVELOPE_SIZES, FONT_SIZES, FONTS } from '~/lib/constants'
+import { FLAP_STYLES, flapPath } from '~/lib/flaps'
 import { useStudio } from '~/composables/useStudio'
 
 const studio = useStudio()
@@ -161,6 +162,17 @@ async function onImage(event: Event) {
           </div>
           <div class="ribbon-caption">Page setup</div>
         </div>
+        <div class="ribbon-group">
+          <div class="ribbon-controls gallery" role="group" aria-label="Back flap style">
+            <button v-for="flap in FLAP_STYLES" :key="flap.id" type="button" class="gallery-item flap-item" :class="{ active: (doc.flap || 'commercial') === flap.id }" :aria-pressed="(doc.flap || 'commercial') === flap.id" @click="studio.setFlap(flap.id)">
+              <svg class="flap-thumb" viewBox="0 0 48 22" aria-hidden="true">
+                <path :d="flapPath(48, 22, flap.id)" />
+              </svg>
+              <span>{{ flap.name }}</span>
+            </button>
+          </div>
+          <div class="ribbon-caption">Back flap</div>
+        </div>
         <div v-if="doc.style !== 'plain'" class="ribbon-group">
           <div class="ribbon-controls">
             <div>
@@ -225,7 +237,9 @@ async function onImage(event: Event) {
         <div class="help-strip">
           <p><strong>Edit</strong>Double-click text on the page. The Home tab formats the selection, or the whole box if you are not typing.</p>
           <p><strong>Move</strong>Drag an object, or use the arrow keys. Shift+arrow nudges 0.25 mm. Drag the handles to resize.</p>
-          <p><strong>Postage</strong>Mailings, Postage. A PDF sheet is split into individual stamps. Pick one and it is placed at its real size.</p>
+          <p><strong>Postage</strong>Mailings, Postage. Barcode keeps the code and the lines under it. Whole stamp joins the mark beside it. The page header is ignored.</p>
+          <p><strong>Addresses</strong>The recipient and return address are one field. Edit them on the envelope or on the letter and both views stay in step.</p>
+          <p><strong>Back flap</strong>On Layout, pick Commercial, Square, Pointed, or Contour. The outline is the seal flap only. It is not printed.</p>
           <p><strong>Print</strong>Use Actual Size / 100%. Turn off headers, footers, and fit-to-page. Ctrl+S saves. Ctrl+Z undoes.</p>
         </div>
       </div>

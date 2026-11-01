@@ -1,6 +1,6 @@
 import { DEFAULT_FRAMES, DEFAULT_WINDOWS, ENVELOPE_SIZES, LEGACY_KEY, STORAGE_KEY, textStyle, uid } from './constants'
 import { escapeHtml, plainToHtml, safeHex } from './text'
-import type { Align, Box, DesignItem, FoldMode, MailDoc, Role, StyleId, SurfaceId, TextStyle } from './types'
+import type { Align, Box, DesignItem, FlapStyle, FoldMode, MailDoc, Role, StyleId, SurfaceId, TextStyle } from './types'
 
 const SURFACES: SurfaceId[] = ['envelope', 'back', 'letter', 'letterBack']
 
@@ -23,6 +23,7 @@ export function createDefault(): MailDoc {
     style: 'plain',
     sortingAssist: true,
     foldGuides: 'front',
+    flap: 'commercial',
     cal: { x: 0, y: 0 },
     insert: { sheet: 'letter', panel: 0, left: 0, top: 0 },
     windows: {
@@ -83,6 +84,7 @@ export function normalize(raw: Partial<MailDoc> | null | undefined): MailDoc | n
   const size = ENVELOPE_SIZES.find(item => item.id === raw.sizeId)
   const style: StyleId = raw.style === 'single' || raw.style === 'double' ? raw.style : 'plain'
   const fold: FoldMode = raw.foldGuides === 'back' || raw.foldGuides === 'none' ? raw.foldGuides : 'front'
+  const flap: FlapStyle = raw.flap === 'square' || raw.flap === 'pointed' || raw.flap === 'contour' ? raw.flap : 'commercial'
   const surfaces = blankSurfaces()
   for (const id of SURFACES) {
     const incoming = raw.surfaces?.[id]
@@ -102,6 +104,7 @@ export function normalize(raw: Partial<MailDoc> | null | undefined): MailDoc | n
     style,
     sortingAssist: raw.sortingAssist !== false,
     foldGuides: fold,
+    flap,
     cal: { x: Number(raw.cal?.x) || 0, y: Number(raw.cal?.y) || 0 },
     insert: {
       sheet: raw.insert?.sheet === 'a4' ? 'a4' : 'letter',

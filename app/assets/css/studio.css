@@ -99,6 +99,9 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .gallery { display: flex; gap: 4px }
 .gallery-item { min-width: 88px; height: 64px; border: 1px solid transparent; background: transparent; border-radius: 4px; font-size: 12px }
 .gallery-item.active { background: var(--selected); border-color: var(--accent) }
+.flap-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 76px; padding: 4px 6px }
+.flap-thumb { width: 56px; height: 26px }
+.flap-thumb path { fill: rgba(15, 108, 189, .12); stroke: #0F548C; stroke-width: 1 }
 .fold-title { font-size: 11px; font-weight: 600; margin-bottom: 4px }
 .fold-radio { display: flex; background: var(--hover); border-radius: 4px; padding: 2px; gap: 2px }
 .fold-radio label { display: flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 2px; font-size: 12px }
@@ -202,7 +205,9 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .postage-placeholder { right: 8mm; top: 10mm; width: 35mm; height: 25mm; display: flex; align-items: center; justify-content: center; border: 1px dashed #8a8886; background: transparent; color: #8a8886; font-size: 11px }
 .postage-placeholder.static { pointer-events: none }
 .side-badge { position: absolute; top: 4mm; right: 4mm; color: #8a8886; font-size: 8px; letter-spacing: .08em; font-weight: 600; pointer-events: none }
-.fold-guide { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(15, 108, 189, .55); pointer-events: none }
+.flap-guides { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1 }
+.flap-guides path { fill: rgba(15, 108, 189, .08); stroke: rgba(15, 84, 140, .85); stroke-width: 1px; vector-effect: non-scaling-stroke }
+.fold-guide { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(15, 108, 189, .55); pointer-events: none; z-index: 1 }
 .fold-guide small { position: absolute; left: 8mm; top: 1.5mm; color: #0F548C; font-size: 8px; background: rgba(255, 255, 255, .92); padding: 1mm 2mm; white-space: nowrap }
 
 .contextbar { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 12px; background: #fff; border-top: 1px solid var(--line) }
@@ -257,13 +262,27 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .soft-small, .pdf-import-status { color: var(--muted); line-height: 1.45 }
 .pdf-import-toolbar { display: flex; gap: 12px; align-items: center; margin: 8px 0 }
 .pdf-import-toolbar select { margin-left: 6px }
-.pdf-preview-outer { position: relative; max-height: 420px; overflow: auto; border: 1px solid var(--input); background: #fff; cursor: crosshair; touch-action: none }
-.pdf-preview-outer canvas { display: block; width: 100%; height: auto }
-.pdf-crop { position: absolute; border: 2px solid var(--accent); outline: 999px solid rgba(0, 0, 0, .28); pointer-events: none }
-.stamp-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin: 8px 0 }
-.stamp-pick { border: 1px solid var(--line); background: #fff; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 11px }
-.stamp-pick img { width: 100%; height: 72px; object-fit: contain; background: #faf9f8 }
-.stamp-pick.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) }
+.pdf-stage { max-height: 440px; overflow: auto; border: 1px solid var(--input); background: #f3f2f1 }
+.pdf-sheet { position: relative; width: 100%; cursor: crosshair; touch-action: none; user-select: none }
+.pdf-sheet canvas { display: block; width: 100%; height: auto; background: #fff }
+.pdf-crop { position: absolute; border: 2px solid var(--accent); box-shadow: 0 0 0 9999px rgba(32, 31, 30, .38); cursor: move; z-index: 2 }
+.pdf-crop span { position: absolute; left: -2px; bottom: calc(100% + 4px); background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; line-height: 18px; padding: 0 6px; pointer-events: none; white-space: nowrap }
+.pdf-handle { position: absolute; width: 8px; height: 8px; background: #fff; border: 1px solid var(--accent); z-index: 3 }
+.pdf-handle.nw { left: -5px; top: -5px; cursor: nwse-resize }
+.pdf-handle.n { left: calc(50% - 4px); top: -5px; cursor: ns-resize }
+.pdf-handle.ne { right: -5px; top: -5px; cursor: nesw-resize }
+.pdf-handle.e { right: -5px; top: calc(50% - 4px); cursor: ew-resize }
+.pdf-handle.se { right: -5px; bottom: -5px; cursor: nwse-resize }
+.pdf-handle.s { left: calc(50% - 4px); bottom: -5px; cursor: ns-resize }
+.pdf-handle.sw { left: -5px; bottom: -5px; cursor: nesw-resize }
+.pdf-handle.w { left: -5px; top: calc(50% - 4px); cursor: ew-resize }
+.stamp-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 8px; margin: 8px 0 12px }
+.stamp-offer { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: #fff; text-align: left }
+.stamp-offer img { width: 100%; height: 88px; object-fit: contain; background: #faf9f8; border: 1px solid var(--line) }
+.stamp-offer strong { font-size: 13px }
+.stamp-offer span { color: var(--muted); font-size: 12px }
+.stamp-offer:hover { background: var(--hover) }
+.stamp-offer.active { background: var(--selected); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }
 .text-link { color: var(--accent); font-weight: 600 }
 .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; padding: 10px 14px; box-shadow: var(--shadow); z-index: 300 }
 .test-sheet { position: relative; width: 100%; height: 100% }

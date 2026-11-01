@@ -3,6 +3,7 @@ export type StyleId = 'plain' | 'single' | 'double'
 export type Role = 'recipient' | 'sender'
 export type Align = 'left' | 'center' | 'right'
 export type FoldMode = 'front' | 'back' | 'none'
+export type FlapStyle = 'commercial' | 'square' | 'pointed' | 'contour'
 
 export interface Box {
   x: number
@@ -57,6 +58,7 @@ export interface MailDoc {
   style: StyleId
   sortingAssist: boolean
   foldGuides: FoldMode
+  flap: FlapStyle
   cal: { x: number; y: number }
   insert: { sheet: 'letter' | 'a4'; panel: 0 | 1 | 2; left: number; top: number }
   windows: Record<Role, Box>

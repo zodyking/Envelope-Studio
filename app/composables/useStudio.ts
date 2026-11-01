@@ -9,7 +9,7 @@ import { addressFrame, hasWindow, isLetter, pageSize, pagesToPrint, resizeBox, s
 import { buildPdf } from '~/lib/pdfExport'
 import { layoutWarnings, recipientPlain } from '~/lib/postal'
 import { asAlign, htmlToPlain, plainToHtml, safeHex } from '~/lib/text'
-import type { Box, DesignItem, FoldMode, MailDoc, Role, StyleId, SurfaceId } from '~/lib/types'
+import type { Box, DesignItem, FlapStyle, FoldMode, MailDoc, Role, StyleId, SurfaceId } from '~/lib/types'
 
 export interface PrintPage {
   surface: SurfaceId
@@ -203,8 +203,9 @@ function buildStudio() {
     if (!isTextId(id)) return
     if (editingId.value === id) return
     if (editingId.value) endEdit()
-    if (id === 'recipient' || id === 'sender') doc.value.view = hasWindow(doc.value, id) ? 'letter' : 'envelope'
-    else {
+    if (id === 'recipient' || id === 'sender') {
+      if (!showsAddress(doc.value, id, doc.value.view)) doc.value.view = 'envelope'
+    } else {
       for (const [surface, data] of Object.entries(doc.value.surfaces) as [SurfaceId, MailDoc['surfaces'][SurfaceId]][]) {
         if (data.items.some(item => item.id === id)) doc.value.view = surface
       }
@@ -526,6 +527,16 @@ function buildStudio() {
 
   function setFold(mode: FoldMode) {
     doc.value.foldGuides = mode
+    persist()
+  }
+
+  function setFlap(style: FlapStyle) {
+    if (doc.value.view !== 'back') {
+      endEdit()
+      doc.value.view = 'back'
+      selection.value = null
+    }
+    doc.value.flap = style
     persist()
   }
 
@@ -893,6 +904,7 @@ function buildStudio() {
     setView,
     setBg,
     setFold,
+    setFlap,
     setShape,
     placeStamp,
     resetSelection,
