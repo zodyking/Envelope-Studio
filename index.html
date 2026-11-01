@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#185ABD">
+<meta name="application-name" content="Envelope">
+<title>Envelope 1 - Envelope</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23185ABD'/%3E%3Crect x='6' y='10' width='20' height='13' rx='1.2' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M7 11.2 16 18l9-6.8' fill='none' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E">
+<style>
+:root{
+  --brand:#185ABD;
+  --accent:#0F6CBD;
+  --accent-hover:#115EA3;
+  --accent-pressed:#0F548C;
+  --ink:#242424;
+  --ink-2:#424242;
+  --muted:#616161;
+  --line:#E1DFDD;
+  --line-strong:#D1D1D1;
+  --input:#8A8886;
+  --hover:#F5F5F5;
+  --pressed:#EBEBEB;
+  --selected:#E5F1FB;
+  --selected-strong:#C7E0F4;
+  --canvas:#E6E6E6;
+  --danger:#C50F1F;
+  --ok:#0E700E;
+  --warn:#8A6914;
+  --shadow:0 1.6px 3.6px rgba(0,0,0,.13),0 .3px .9px rgba(0,0,0,.11);
+  --font:"Segoe UI Variable Text","Segoe UI","Segoe UI Web (West European)",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:12px/1.4 var(--font);color:var(--ink);background:#fff;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 1px var(--accent)}
+::selection{background:#C7E0F4}
+.app{height:100%;display:flex;flex-direction:column;min-height:0;min-width:0;max-width:100%}
+.ribbon-host,.app-body,.layout,.main,.editor,.titlebar,.statusbar,.contextbar{min-width:0;max-width:100%}
+.ribbon-host{overflow:hidden}
+.bs-product .app-mark{color:#185ABD}
+.hide{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Title bar — Office Colorful theme */
+.titlebar{flex:none;min-height:36px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--brand);color:#fff;position:relative;z-index:20}
+.title-left,.title-right,.qat{display:flex;align-items:center;gap:2px;min-width:0}
+.app-mark{width:20px;height:20px;display:grid;place-items:center;margin-right:4px;flex:none}
+.qat-btn{width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:2px;background:transparent;color:#fff;padding:0}
+.qat-btn:hover{background:rgba(255,255,255,.16)}
+.qat-btn:active{background:rgba(0,0,0,.12)}
+.qat-btn svg{width:16px;height:16px;display:block}
+#saveIndicator{margin-left:6px;font-size:12px;color:rgba(255,255,255,.92);white-space:nowrap}
+.title-center{position:absolute;left:50%;top:0;height:36px;display:flex;align-items:center;transform:translateX(-50%);font-size:12px;pointer-events:none;white-space:nowrap;max-width:40vw}
+.title-right{margin-left:auto;position:relative}
+.tellme{display:flex;align-items:center;gap:6px;height:26px;width:220px;padding:0 8px;border-radius:4px;background:rgba(255,255,255,.18);color:#fff}
+.tellme svg{width:14px;height:14px;flex:none}
+.tellme input{flex:1;min-width:0;height:24px;border:0;background:transparent;color:#fff;padding:0;box-shadow:none!important}
+.tellme input::placeholder{color:rgba(255,255,255,.86)}
+.tellme:focus-within{background:rgba(255,255,255,.28);box-shadow:inset 0 0 0 1px #fff}
+.tellme-results{position:absolute;top:calc(100% + 6px);right:0;width:min(340px,80vw);background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:4px;box-shadow:var(--shadow);padding:4px;z-index:40;max-height:320px;overflow:auto}
+.tellme-results button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;border:0;background:#fff;border-radius:2px;padding:7px 10px;color:var(--ink)}
+.tellme-results button strong{font-size:14px;font-weight:600}
+.tellme-results button span{font-size:12px;color:var(--muted)}
+.tellme-results button:hover,.tellme-results button[aria-selected="true"]{background:var(--hover)}
+.tellme-results .empty{padding:10px;color:var(--muted);font-size:12px}
+
+/* Ribbon */
+.ribbon-host{flex:none;background:#fff;position:relative;z-index:15}
+.ribbon-tabs{display:flex;align-items:flex-end;gap:0;padding:0 6px 0 4px;min-height:32px;background:#fff;overflow-x:auto;scrollbar-width:none}
+.ribbon-tabs::-webkit-scrollbar{display:none}
+.ribbon-tab,.file-tab{position:relative;border:0;background:transparent;color:var(--ink);font-size:14px;height:32px;padding:0 12px;border-radius:2px 2px 0 0}
+.ribbon-tab:hover,.file-tab:hover{background:var(--hover)}
+.ribbon-tab.active{color:var(--accent);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent)}
+.file-tab.is-open{color:var(--accent);font-weight:600}
+.ribbon-collapse{margin-left:auto;align-self:center;width:28px;height:28px;border:0;border-radius:2px;background:transparent;color:var(--ink);display:grid;place-items:center}
+.ribbon-collapse:hover{background:var(--hover)}
+.ribbon-collapse svg{width:14px;height:14px;transition:transform .15s}
+body.ribbon-collapsed .ribbon-collapse svg{transform:rotate(180deg)}
+body.ribbon-collapsed .ribbon-tabs{border-bottom:1px solid var(--line-strong)}
+.ribbon{height:108px;border-bottom:1px solid var(--line-strong);background:#fff;overflow-x:auto;overflow-y:hidden}
+body.ribbon-collapsed .ribbon{display:none}
+.ribbon-panel{display:none;height:100%;align-items:stretch;padding:2px 4px 0;min-width:max-content}
+.ribbon-panel.active{display:flex}
+.ribbon-group{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:0 8px 0;margin:2px 0 0;border-right:1px solid var(--line);min-height:100px}
+.ribbon-group:last-child{border-right:0}
+.ribbon-controls{flex:1;display:flex;align-items:center;gap:4px}
+.ribbon-caption{font-size:11px;color:var(--muted);padding:2px 12px 4px;text-align:center}
+.rb-lg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:58px;max-width:92px;padding:4px 6px;border:0;border-radius:2px;background:transparent;color:var(--ink);font-size:11px;line-height:1.15;text-align:center}
+.rb-lg:hover,.rb-sm:hover,.rb-toggle:hover{background:var(--hover)}
+.rb-lg:active,.rb-sm:active{background:var(--pressed)}
+.rb-lg svg,.rb-glyph{width:28px;height:28px;color:var(--accent);display:block}
+.rb-sm{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:0;border-radius:2px;background:transparent;color:var(--ink);font-size:12px;white-space:nowrap}
+.rb-sm svg{width:16px;height:16px;display:block}
+.rb-sm.is-on,.rb-toggle:has(input:checked){background:var(--selected-strong);color:var(--accent)}
+.rb-col{display:flex;flex-direction:column;justify-content:center;gap:2px}
+.rb-row{display:flex;align-items:center;gap:4px}
+.rb-select,.rb-size{height:26px;border:1px solid var(--input);border-radius:2px;background:#fff;color:var(--ink);padding:0 4px;font-size:12px}
+.rb-select{min-width:148px}
+.rb-size{width:64px}
+.rb-toggle{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:4px;height:26px;min-width:36px;padding:0 6px;border-radius:2px;font-size:13px;font-weight:700}
+.rb-toggle input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+[data-cmd]{position:relative}
+.rb-toggle small{font-size:10px;font-weight:600;color:var(--muted)}
+.dlg-launcher{position:absolute;right:2px;bottom:1px;width:16px;height:16px;padding:0;border:0;border-radius:2px;background:transparent;color:var(--muted);display:grid;place-items:center}
+.dlg-launcher:hover{background:var(--hover);color:var(--ink)}
+.help-strip{display:flex;gap:18px;align-items:center;padding:8px 16px;max-width:1100px}
+.help-strip p{margin:0;font-size:12px;color:var(--ink-2);max-width:240px;line-height:1.45}
+.help-strip strong{display:block;color:var(--ink);margin-bottom:2px}
+.gallery{display:flex;gap:4px}
+.gallery-item{width:76px;border:1px solid transparent;background:transparent;border-radius:4px;padding:6px 4px 4px;color:var(--ink);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.gallery-item svg{width:52px;height:32px;color:var(--accent)}
+.gallery-item:hover{background:var(--hover);border-color:var(--line)}
+.gallery-item.active{background:var(--selected);border-color:var(--accent)}
+.bg-field{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.bg-field input[type=color]{width:32px;height:26px;padding:2px;border:1px solid var(--input);border-radius:2px;background:#fff;cursor:pointer}
+.custom-size{display:flex;gap:8px;align-items:flex-end}
+.custom-size label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted)}
+.custom-size input{width:72px;height:26px;border:1px solid var(--input);border-radius:2px;padding:0 6px;background:#fff;color:var(--ink)}
+.window-help{max-width:240px;font-size:11px;line-height:1.45;color:var(--muted)}
+.window-help p{margin:0 0 4px}
+.fold-controls{align-items:stretch}
+.fold-title{font-size:11px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.fold-radio{display:flex;background:var(--hover);border-radius:4px;padding:2px;gap:2px}
+.fold-radio label{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;height:24px;border-radius:2px;font-size:12px;color:var(--ink);cursor:pointer;padding:0 6px}
+.fold-radio label:has(input:checked){background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.fold-radio input{margin:0;accent-color:var(--accent)}
+#foldExplanation{display:block;max-width:260px;margin-top:6px;color:var(--muted);font-size:11px;line-height:1.4}
+.guide-badge{display:inline-block;margin-left:6px;padding:0 6px;border-radius:10px;background:var(--selected);color:var(--accent);font-size:10px;font-weight:600}
+
+/* KeyTips */
+body.show-keytips [data-key]::after,body.show-cmdtips .ribbon-panel.active [data-cmd]::after{
+  content:attr(data-key);position:absolute;top:-2px;left:4px;z-index:5;
+  background:#fff;color:#000;border:1px solid #000;box-shadow:1px 1px 0 #000;
+  font:700 11px/1.2 var(--font);padding:0 3px;text-transform:uppercase;pointer-events:none
+}
+body.show-cmdtips .ribbon-panel.active [data-cmd]::after{content:attr(data-cmd);top:-6px}
+
+/* Backstage */
+.backstage{display:none;background:#fff;min-height:0;flex-direction:column}
+.app-body{flex:1;min-height:0;display:flex;flex-direction:column}
+body.backstage-open .app-body{flex-direction:row}
+body.backstage-open .backstage{display:flex;width:320px;flex:none;border-right:1px solid var(--line);background:#fff}
+body.backstage-open .ribbon-host,body.backstage-open .doc-caption{display:none}
+body.backstage-open .editor{display:none!important}
+body.backstage-open .layout{grid-template-columns:minmax(0,1fr)}
+.bs-back{width:32px;height:32px;margin:12px 12px 6px;border:0;border-radius:50%;background:transparent;color:var(--ink);display:grid;place-items:center}
+.bs-back:hover{background:var(--hover)}
+.bs-back svg{width:16px;height:16px}
+.bs-link{display:block;width:calc(100% - 16px);margin:2px 8px;text-align:left;padding:8px 12px;border:0;border-radius:4px;background:transparent;color:var(--ink);font-size:14px}
+.bs-link:hover{background:var(--hover)}
+.bs-link.active{background:var(--selected);color:var(--accent);font-weight:600}
+.bs-content{flex:1;overflow:auto;padding:12px 22px 28px}
+.bs-content h1{font-size:28px;font-weight:600;margin:8px 0 16px;letter-spacing:-.3px}
+.bs-product{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.bs-product strong{font-size:18px}
+.bs-product small{display:block;color:var(--muted);font-size:12px}
+.bs-meta{display:grid;gap:8px;margin:0;font-size:12px}
+.bs-meta div{display:grid;grid-template-columns:88px 1fr;gap:8px}
+.bs-meta dt{color:var(--muted);margin:0}
+.bs-meta dd{margin:0}
+.bs-print{display:flex;flex-direction:column;align-items:center;gap:4px;width:88px;padding:8px 6px;border:0;border-radius:4px;background:transparent;color:var(--ink);font-size:14px;font-weight:600}
+.bs-print svg{width:36px;height:36px;color:var(--accent)}
+.bs-print:hover{background:var(--hover)}
+.bs-note{font-size:12px;color:var(--muted);line-height:1.5;max-width:260px;margin:14px 0}
+.bs-action{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;text-align:left;margin:6px 0;padding:8px 10px;border:1px solid var(--line-strong);border-radius:4px;background:#fff;color:var(--ink);font-size:13px;font-weight:600}
+.bs-action:hover{background:var(--hover);border-color:var(--input)}
+
+/* Workspace */
+.layout{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:300px minmax(0,1fr)}
+.editor{background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+body.pane-collapsed .editor{display:none}
+body.pane-collapsed .layout{grid-template-columns:minmax(0,1fr)}
+.editor-head{padding:14px 16px 12px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:2px 8px;align-items:flex-start}
+.editor-head .eyebrow{width:100%;color:var(--muted);font-size:12px;font-weight:600}
+.pane-close{margin-left:auto;width:28px;height:28px;border:0;border-radius:2px;background:transparent;color:var(--ink);font-size:18px;line-height:1}
+.pane-close:hover{background:var(--hover)}
+.editor-head h1{font-size:18px;font-weight:600;margin:0;letter-spacing:-.2px;flex:1}
+#surfaceToolNote{width:100%;margin:2px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+.editor-scroll{flex:1;overflow:auto;min-height:0;padding:0 0 8px}
+.form-section{padding:14px 16px;border-bottom:1px solid var(--line)}
+.section-title{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.section-title h2{margin:0;font-size:14px;font-weight:600}
+.required{margin-left:auto;font-size:11px;color:var(--muted)}
+.input-label{display:block;margin:0 0 4px;font-size:12px;font-weight:600;color:var(--ink)}
+textarea,input,select{border:1px solid var(--input);border-radius:2px;background:#fff;color:var(--ink)}
+textarea{width:100%;min-height:92px;resize:vertical;padding:8px;font-size:13px;line-height:1.45}
+.field-under{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--muted)}
+.text-link{border:0;background:none;padding:0;color:var(--accent);font-size:12px;font-weight:600;text-align:left}
+.text-link:hover{text-decoration:underline}
+.sort-toggle{display:flex;gap:8px;align-items:flex-start;margin-top:12px;cursor:pointer}
+.sort-toggle input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.sort-toggle span{display:flex;flex-direction:column;gap:2px}
+.sort-toggle strong{font-size:12px;font-weight:600}
+.sort-toggle small{font-size:12px;font-weight:400;color:var(--muted);line-height:1.4}
+.sort-status{display:flex;flex-direction:column;gap:3px;margin-top:8px;font-size:12px;line-height:1.4}
+.sort-status .ok{color:var(--ok)}
+.sort-status .warn{color:var(--warn)}
+.merge-line{margin-top:10px;font-size:12px;color:var(--ink-2)}
+.details-section{padding:8px 16px 12px;border-bottom:1px solid var(--line)}
+.details-section summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;min-height:32px;font-size:14px}
+.details-section summary::-webkit-details-marker{display:none}
+.details-chevron{color:var(--muted);transition:transform .15s}
+.details-section[open] .details-chevron{transform:rotate(180deg)}
+.details-note{margin-left:auto;font-size:12px;color:var(--muted)}
+.details-content{padding:4px 0 8px}
+.custom-text-list{display:grid;gap:6px}
+.custom-text-item{display:flex;gap:6px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:4px;background:#faf9f8;min-width:0}
+.custom-text-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.editor-bottom{flex:none;padding:10px 16px;border-top:1px solid var(--line);background:#faf9f8;color:var(--muted);font-size:12px;line-height:1.45}
+
+.main{min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--canvas)}
+.doc-caption{flex:none;display:flex;gap:12px;align-items:baseline;padding:6px 16px;background:#f3f2f1;border-bottom:1px solid var(--line)}
+.doc-caption h2{margin:0;font-size:12px;font-weight:600}
+.doc-caption p{margin:0;font-size:12px;color:var(--muted)}
+.stage{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px;background:var(--canvas)}
+.sheet-stack{margin:auto;display:grid;grid-template-columns:24px auto;grid-template-rows:24px auto;align-items:start}
+.ruler-corner{background:#f3f2f1;border-right:1px solid #d2d0ce;border-bottom:1px solid #d2d0ce}
+.ruler{display:block;background:#f3f2f1}
+body.rulers-off .ruler,body.rulers-off .ruler-corner{display:none}
+body.rulers-off .sheet-stack{grid-template-columns:auto;grid-template-rows:auto}
+body.rulers-off .stage-inner{grid-column:1;grid-row:1}
+.stage-inner{grid-column:2;grid-row:2}
+.page-wrapper{position:relative;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18),0 0 1px rgba(0,0,0,.16)}
+.paper{position:absolute;top:0;left:0;transform-origin:0 0;background:#fff;overflow:visible}
+.safety-outline{position:absolute;inset:5mm;border:1px dotted #c8c6c4;pointer-events:none}
+.window-shape{position:absolute;display:flex;align-items:center;justify-content:center;border:1px dashed var(--accent);background:rgba(229,241,251,.55);pointer-events:none;color:#7aa0c8;font:600 8px var(--font);letter-spacing:.04em;z-index:1}
+.address-block{position:absolute;white-space:pre-wrap;line-height:1.35;cursor:grab;touch-action:none;user-select:none;color:#242424;border:1px solid transparent;z-index:2;overflow:visible;min-width:9mm;min-height:7mm}
+.address-block:hover{border-color:#8ab4e0}
+.address-block.selected{outline:1px solid #0078D4;outline-offset:0;z-index:4}
+.address-block.selected:after{content:"";position:absolute;right:-5px;bottom:-5px;width:7px;height:7px;border:1px solid #0078D4;background:#fff}
+.address-block.placeholder{color:#8a8886;white-space:normal;font-style:italic}
+.address-block.through-window{color:#242424}
+.address-line{display:block;white-space:pre;min-height:1em;overflow:visible}
+.address-block .address-line{pointer-events:none}
+.extra-block,.stamp-wrapper{position:absolute;isolation:isolate;overflow:visible}
+.stamp-wrapper{z-index:2;cursor:grab;touch-action:none;border:1px solid transparent}
+.stamp-wrapper:hover{border-color:#8ab4e0}
+.stamp-wrapper.selected{outline:1px solid #0078D4;z-index:4}
+.stamp-art,.logo-content{display:block;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none}
+.design-image img,.logo-content{object-fit:contain}
+.canvas-delete{position:absolute;top:-10px;right:-10px;width:18px;height:18px;padding:0;display:grid;place-items:center;background:#fff;border:1px solid var(--danger);border-radius:2px;color:var(--danger);font-weight:700;font-size:14px;line-height:1;cursor:pointer;z-index:20;opacity:0;visibility:hidden;pointer-events:none}
+.extra-block:hover .canvas-delete,.extra-block.selected .canvas-delete,.extra-block:focus-within .canvas-delete,.stamp-wrapper:hover .canvas-delete,.stamp-wrapper.selected .canvas-delete,.stamp-wrapper:focus-within .canvas-delete,.design-item:hover .canvas-delete,.design-item.selected .canvas-delete,.design-item:focus-within .canvas-delete{opacity:1;visibility:visible;pointer-events:auto}
+.canvas-delete:hover{background:var(--danger);color:#fff}
+.postage-placeholder{position:absolute;right:8mm;top:10mm;width:35mm;height:25mm;display:flex;align-items:center;justify-content:center;border:1px dashed #8a8886;color:#8a8886;font:11px/1.3 var(--font);text-align:center;pointer-events:none}
+.side-badge{position:absolute;top:4mm;right:4mm;z-index:8;color:#8a8886;font-size:8px;letter-spacing:.08em;font-weight:600;pointer-events:none}
+.fold-guide{position:absolute;left:0;right:0;border-top:1px dashed rgba(15,108,189,.55);height:0;z-index:9;pointer-events:none}
+.fold-guide small{position:absolute;right:5mm;top:1.5mm;color:#0F548C;font-size:7px;background:rgba(255,255,255,.9);padding:1mm 2mm;font-weight:600;white-space:nowrap}
+.fold-guide .fold-dot{position:absolute;left:0;top:-2px;width:2mm;height:4px;background:#0F6CBD}
+.fold-guide.marker-2 small{top:-5mm}
+.insert-window{position:absolute;border:1px dashed #8ab4e0;background:rgba(229,241,251,.35);pointer-events:none}
+.design-text{white-space:pre-wrap;line-height:1.25;padding:0;overflow:hidden}
+.design-item{position:absolute;z-index:1;cursor:grab;touch-action:none;isolation:isolate;--design-stroke:.7mm;--design-color:#315b88}
+.design-line{border-top:var(--design-stroke) solid var(--design-color)}
+.design-rect{border:var(--design-stroke) solid var(--design-color)}
+.design-rect[style*='--design-filled:1']{background:var(--design-color)}
+.design-item.selected{outline:1px dashed #0078D4;outline-offset:3px;z-index:3}
+.design-item .canvas-delete{z-index:12}
+.design-item:not([data-role]){pointer-events:none}
+.print-sheet .design-item{z-index:0}
+
+.contextbar{flex:none;min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 12px;background:#fff;border-top:1px solid var(--line)}
+.context-left,.context-right{display:flex;align-items:center;gap:8px;min-width:0}
+.selection-icon{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line-strong);border-radius:2px;color:var(--accent);flex:none}
+.context-left strong{display:block;font-size:12px}
+.context-left span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.context-right label{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:600}
+.context-right input{width:68px;height:26px;padding:0 6px}
+.unit{color:var(--muted);font-size:11px}
+.statusbar{flex:none;min-height:26px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 8px;background:#f3f2f1;border-top:1px solid var(--line-strong);color:var(--ink)}
+.status-left,.status-right,.status-views{display:flex;align-items:center;gap:2px;min-width:0}
+.status-sep{width:1px;height:14px;background:var(--line-strong);margin:0 6px;flex:none}
+#printReadiness{display:inline-flex;align-items:center;gap:6px;max-width:36vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+#dimensionsText,#previewTitle{font-size:12px}
+.ready-dot{width:8px;height:8px;border-radius:50%;background:#107C10;flex:none}
+.ready.has-warning{color:var(--warn)}
+.ready.has-warning .ready-dot{background:#C19C00}
+.view-btn{border:0;background:transparent;color:var(--ink);border-radius:2px;padding:2px 7px;min-height:22px;font-size:12px}
+.view-btn:hover{background:#e1dfdd}
+.view-btn.active{background:var(--selected-strong);color:var(--accent);font-weight:600}
+.zoom-btn{width:22px;height:22px;border:0;border-radius:2px;background:transparent;color:var(--ink);font-size:14px;line-height:1}
+.zoom-btn:hover,#zoomDisplay:hover,#zoomFit:hover{background:#e1dfdd}
+.zoom-range{width:92px;accent-color:var(--accent)}
+#zoomDisplay,#zoomFit{border:0;background:transparent;color:var(--ink);border-radius:2px;padding:2px 6px;font-size:12px;min-width:42px}
+
+/* Dialogs — Fluent */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.drawer{width:min(720px,100%);height:min(88vh,860px);background:#fff;border-radius:8px;box-shadow:0 25px 60px rgba(0,0,0,.28);display:flex;flex-direction:column;overflow:hidden}
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.drawer-head h2{font-size:20px;font-weight:600;margin:0;letter-spacing:-.2px}
+.close{width:32px;height:32px;border:0;border-radius:2px;background:#fff;color:var(--ink);font-size:20px;line-height:1}
+.close:hover{background:var(--hover)}
+.drawer-body{padding:8px 20px 24px;overflow:auto;flex:1;font-size:12px;line-height:1.5}
+.drawer-body p{color:var(--muted)}
+.drawer-section{padding:16px 0;border-bottom:1px solid var(--line)}
+.drawer-section:first-child{padding-top:8px}
+.drawer-section h3{font-size:14px;font-weight:600;margin:12px 0 6px;color:var(--ink)}
+.drawer-section .input-label{margin:12px 0 4px}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:0 12px;border:1px solid var(--input);border-radius:4px;background:#fff;color:var(--ink);font-size:12px;font-weight:600}
+.button:hover{background:var(--hover)}
+.button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.button.primary:hover{background:var(--accent-hover)}
+.button.full{width:100%;margin-top:8px}
+.button.tiny{min-height:26px;padding:0 8px;font-size:12px}
+.button.danger,.danger{color:var(--danger)!important;border-color:#f1bbbc!important}
+.button.danger:hover{background:#fdf3f4!important}
+.note-card{border:1px solid var(--line);border-radius:4px;background:#faf9f8;padding:10px 12px;color:var(--ink-2);font-size:12px;line-height:1.5;margin:10px 0}
+.note-card.orange-note{background:#FFF4CE;border-color:#FDE300;color:var(--ink)}
+.option-card{display:flex;gap:10px;border:1px solid var(--line);border-radius:4px;padding:10px;margin:8px 0;cursor:pointer}
+.option-card:has(input:checked){border-color:var(--accent);background:var(--selected)}
+.option-card input{margin:2px 0 0;accent-color:var(--accent);flex:none;width:16px!important;height:16px!important;min-width:16px!important;padding:0!important}
+.option-card strong{display:block}
+.option-card small{display:block;color:var(--muted);margin-top:2px;line-height:1.4}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings-grid label,.design-fields label,.crop-fields label,.line-controls label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.settings-grid input,.settings-grid select,.design-fields input,.design-fields select,.crop-fields input,.line-controls input,.line-controls select{margin-top:4px;width:100%;min-width:0;padding:6px;border:1px solid var(--input);border-radius:2px;background:#fff;color:var(--ink)}
+.line-controls input[type=checkbox],.design-fields input[type=checkbox],.inline-format input{width:auto;margin-top:0}
+input[type=color]{padding:2px;height:28px}
+.soft-divider{height:1px;background:var(--line);margin:14px 0}
+.soft-small{font-size:12px;color:var(--muted)}
+.style-advisory{background:var(--selected);border:1px solid #c7e0f4;padding:10px;border-radius:4px;font-size:12px;color:var(--ink-2);margin:10px 0}
+.line-editor,.design-entry{border:1px solid var(--line);border-radius:4px;padding:10px;margin:8px 0}
+.line-heading{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+.line-heading strong{flex:1;overflow-wrap:anywhere}
+.line-number{width:20px;height:20px;display:grid;place-items:center;border-radius:2px;background:var(--selected);color:var(--accent);font-weight:700;font-size:11px}
+.line-controls,.design-fields,.crop-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.crop-fields{grid-template-columns:repeat(4,minmax(0,1fr))}
+.design-presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.inline-format{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:600;cursor:pointer}
+.inline-format input{accent-color:var(--accent)}
+.pdf-import-panel{display:flex;flex-direction:column;gap:8px;padding:12px;background:#faf9f8;border:1px solid var(--line);border-radius:4px;margin-top:12px}
+.pdf-preview-outer{position:relative;max-height:410px;overflow:auto;border:1px solid var(--input);background:#fff;line-height:0;touch-action:none;user-select:none;cursor:crosshair}
+.pdf-preview-outer canvas{display:block;width:100%;height:auto}
+.pdf-crop{position:absolute;pointer-events:none;border:2px solid var(--accent);outline:999px solid rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px #fff;display:none}
+.pdf-help,.pdf-import-status{color:var(--muted);font-size:12px;line-height:1.45}
+.pdf-import-toolbar{display:flex;align-items:center;gap:8px}
+.pdf-import-toolbar label{font-size:12px;flex:1}
+.pdf-import-toolbar select{width:120px}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#fff;color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:4px;padding:10px 14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;z-index:300;font-size:12px;transition:opacity .15s}
+.toast.visible{opacity:1}
+.print-sheet{width:var(--pw);height:var(--ph);position:relative;background:#fff;break-after:page;page-break-after:always;overflow:hidden}
+.print-piece{position:absolute;white-space:pre-wrap;color:#111;line-height:1.35}
+.print-stamp{position:absolute;display:block}
+.test-mark{position:absolute;background:#111}
+#printHost{display:none}
+
+@media(max-width:1100px){
+  .layout{grid-template-columns:280px minmax(0,1fr)}
+  .tellme{width:160px}
+  .title-center{max-width:28vw}
+}
+@media(max-width:760px){
+  body{overflow:auto;height:auto}
+  .app{height:auto;min-height:100vh;overflow:visible}
+  .title-center{position:static;transform:none;height:auto;max-width:none;flex:1}
+  .doc-app{display:none}
+  #saveIndicator{display:none}
+  .tellme{width:120px}
+  .ribbon{height:auto;max-height:150px}
+  .app-body,.layout{display:flex;flex-direction:column;height:auto}
+  .main{order:1;min-height:70vh}
+  .editor{order:2;border-right:0;border-top:1px solid var(--line)}
+  .stage{min-height:320px;padding:16px}
+  .contextbar,.statusbar{flex-wrap:wrap;height:auto;padding:6px 8px}
+  .context-left span{white-space:normal}
+  #printReadiness{max-width:100%}
+  .rb-lg,.ribbon-tab,.file-tab,.qat-btn,.bs-link{min-height:44px}
+  body.backstage-open .app-body{flex-direction:column}
+  body.backstage-open .backstage{width:100%;max-height:none}
+  .drawer{width:100%;height:100%;border-radius:0}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(forced-colors:active){
+  .ribbon-tab.active,.view-btn.active,.gallery-item.active{outline:2px solid CanvasText}
+  .page-wrapper{border:1px solid CanvasText}
+}
+@media print{
+  @page{margin:0}
+  html,body{margin:0!important;background:#fff!important;overflow:visible!important;height:auto!important}
+  .app>*:not(#printHost){display:none!important}
+  #printHost{display:block!important;position:absolute;top:0;left:0;margin:0;padding:0}
+  .print-sheet{box-shadow:none!important;margin:0!important;border:0!important;overflow:hidden!important}
+  .print-sheet:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+<style id="print-page-rule">@page{size:9.5in 4.125in;margin:0}</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-env" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5V3z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 3v6h8V3M8 21v-6h8v6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3h10v5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="8" width="16" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 13h10v8H7z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6 16.8 7.2M7.2 16.8 5.6 18.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M12 6v12M8 18h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-shape" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 17 19 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.4" fill="currentColor"/><path d="m4 16 4.5-3.5L12 15l3-2.2L20 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V4h8v2M8 18v2h8v-2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-letter" viewBox="0 0 24 24"><path d="M6 3h12v18H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 8h6M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16.5" cy="9" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19c.8-3 2.8-4.5 5.5-4.5S14 16 14.8 19M14 19c.4-2 1.5-3 3-3 1.3 0 2.2.7 2.8 2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-launch" viewBox="0 0 10 10"><path d="M2 8 8 2M5 2h3v3" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>
+</svg>
+<div class="app">
+<header class="titlebar">
+  <div class="title-left">
+    <span class="app-mark" title="Envelope"><svg width="20" height="20" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-env"/></svg></span>
+    <div class="qat" aria-label="Quick Access Toolbar">
+      <button type="button" class="qat-btn" id="qatSave" title="Save (Ctrl+S)" aria-label="Save"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-save"/></svg></button>
+      <button type="button" class="qat-btn" data-click="printEnvelope" title="Quick Print" aria-label="Quick Print"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-print"/></svg></button>
+      <button type="button" class="qat-btn" data-click="settingsOpen" title="Options" aria-label="Options"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
+    </div>
+    <span id="saveIndicator">Saved to this PC</span>
+  </div>
+  <div class="title-center"><span id="docTitle">Envelope 1</span><span class="doc-app"> - Envelope</span></div>
+  <div class="title-right">
+    <label class="tellme">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-search"/></svg>
+      <input id="tellmeInput" type="search" placeholder="Search" aria-label="Search" autocomplete="off">
+    </label>
+    <div id="tellmeResults" class="tellme-results" hidden role="listbox" aria-label="Search results"></div>
+  </div>
+</header>
+<div class="ribbon-host">
+  <div class="ribbon-tabs" role="tablist" aria-label="Ribbon">
+    <button type="button" class="file-tab" id="fileTab" data-key="f" role="tab" aria-selected="false" aria-controls="backstage">File</button>
+    <button type="button" class="ribbon-tab active" data-tab="home" data-key="h" role="tab" aria-selected="true" aria-controls="panel-home">Home</button>
+    <button type="button" class="ribbon-tab" data-tab="insert" data-key="n" role="tab" aria-selected="false" aria-controls="panel-insert">Insert</button>
+    <button type="button" class="ribbon-tab" data-tab="design" data-key="g" role="tab" aria-selected="false" aria-controls="panel-design">Design</button>
+    <button type="button" class="ribbon-tab" data-tab="layout" data-key="p" role="tab" aria-selected="false" aria-controls="panel-layout">Layout</button>
+    <button type="button" class="ribbon-tab" data-tab="mailings" data-key="m" role="tab" aria-selected="false" aria-controls="panel-mailings">Mailings</button>
+    <button type="button" class="ribbon-tab" data-tab="review" data-key="r" role="tab" aria-selected="false" aria-controls="panel-review">Review</button>
+    <button type="button" class="ribbon-tab" data-tab="view" data-key="w" role="tab" aria-selected="false" aria-controls="panel-view">View</button>
+    <button type="button" class="ribbon-tab" data-tab="help" role="tab" aria-selected="false" aria-controls="panel-help">Help</button>
+    <button type="button" class="ribbon-collapse" id="ribbonCollapse" title="Collapse the Ribbon" aria-label="Collapse the Ribbon"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-chevron"/></svg></button>
+  </div>
+  <div class="ribbon" id="ribbon">
+    <div class="ribbon-panel active" id="panel-home" data-panel="home" role="tabpanel" aria-labelledby="tab-home">
+      <div class="ribbon-group">
+        <button type="button" class="dlg-launcher" data-click="styleRecipient" title="Line styles" aria-label="Line styles"><svg width="10" height="10" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-launch"/></svg></button>
+        <div class="ribbon-controls">
+          <div class="rb-col">
+            <div class="rb-row">
+              <select id="fontSelect" class="rb-select" data-cmd="f" aria-label="Font" title="Font">
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Times New Roman">Times New Roman</option>
+              </select>
+              <label class="sr-only" for="recipientFont">Recipient size</label>
+              <input id="recipientFont" class="rb-size" type="number" min="6" max="28" step="0.5" title="Recipient font size" aria-label="Recipient font size">
+              <label class="sr-only" for="senderFont">Return size</label>
+              <input id="senderFont" class="rb-size" type="number" min="6" max="22" step="0.5" title="Return address font size" aria-label="Return address font size">
+            </div>
+            <div class="rb-row">
+              <label class="rb-toggle" title="Bold recipient name"><input type="checkbox" id="recipientNameBold"><b>B</b><small>To</small></label>
+              <label class="rb-toggle" title="Bold return name"><input type="checkbox" id="senderNameBold"><b>B</b><small>From</small></label>
+              <button type="button" class="rb-sm" id="styleRecipient" data-cmd="l">To lines</button>
+              <button type="button" class="rb-sm" id="styleSender">From lines</button>
+            </div>
+          </div>
+        </div>
+        <div class="ribbon-caption">Font</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <div class="rb-col">
+            <button type="button" class="rb-sm" id="selectTo" data-cmd="r">Select Recipient</button>
+            <button type="button" class="rb-sm" id="selectFrom" data-cmd="e">Select Return</button>
+          </div>
+        </div>
+        <div class="ribbon-caption">Editing</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-insert" data-panel="insert" role="tabpanel">
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="quickAddText" data-cmd="x"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-text"/></svg><span>Text Box</span></button>
+          <button type="button" class="rb-lg" data-click="addText" data-cmd="m"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-text"/></svg><span>Message</span></button>
+          <button type="button" class="rb-lg" id="letterTemplate" data-cmd="l"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-letter"/></svg><span>Letter</span></button>
+        </div>
+        <div class="ribbon-caption">Text</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="quickAddShape" data-cmd="s"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-shape"/></svg><span>Rectangle</span></button>
+          <button type="button" class="rb-lg" id="quickAddLine" data-cmd="i"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-line"/></svg><span>Line</span></button>
+          <button type="button" class="rb-lg" id="quickAddImage" data-cmd="p"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-image"/></svg><span>Pictures</span></button>
+        </div>
+        <div class="ribbon-caption">Illustrations</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-design" data-panel="design" role="tabpanel">
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <div class="gallery" role="group" aria-label="Envelope style">
+            <button type="button" class="gallery-item active" data-style-pick="plain" aria-pressed="true"><svg aria-hidden="true" viewBox="0 0 52 32"><rect x="2" y="6" width="48" height="22" fill="#fff" stroke="currentColor" stroke-width="1.4"/><path d="M2 8 26 20 50 8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span>Regular</span></button>
+            <button type="button" class="gallery-item" data-style-pick="single" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 52 32"><rect x="2" y="6" width="48" height="22" fill="#fff" stroke="currentColor" stroke-width="1.4"/><rect x="8" y="16" width="22" height="8" fill="#E5F1FB" stroke="currentColor" stroke-width="1"/></svg><span>One window</span></button>
+            <button type="button" class="gallery-item" data-style-pick="double" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 52 32"><rect x="2" y="6" width="48" height="22" fill="#fff" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="9" width="14" height="6" fill="#E5F1FB" stroke="currentColor" stroke-width="1"/><rect x="8" y="18" width="22" height="7" fill="#E5F1FB" stroke="currentColor" stroke-width="1"/></svg><span>Two windows</span></button>
+          </div>
+        </div>
+        <div class="ribbon-caption">Envelope</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="designOpen" data-cmd="d"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-pen"/></svg><span class="rb-label">Design Pane</span></button>
+          <button type="button" class="rb-lg" id="quickOpenDesign"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-shape"/></svg><span>All artwork</span></button>
+        </div>
+        <div class="ribbon-caption">Design</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <label class="bg-field">Page Color <input type="color" id="surfaceBg" value="#ffffff" title="Page color for this side"></label>
+        </div>
+        <div class="ribbon-caption">Page Background</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-layout" data-panel="layout" role="tabpanel">
+      <div class="ribbon-group">
+        <button type="button" class="dlg-launcher" data-click="settingsOpen" title="Page Setup" aria-label="Page Setup"><svg width="10" height="10" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-launch"/></svg></button>
+        <div class="ribbon-controls">
+          <div class="rb-col">
+            <div class="rb-row">
+              <label class="sr-only" for="sizePreset">Size</label>
+              <select id="sizePreset" class="rb-select" data-cmd="s" title="Envelope size"></select>
+              <label class="sr-only" for="styleSelect">Type</label>
+              <select id="styleSelect" class="rb-select" data-cmd="t" title="Envelope type">
+                <option value="plain">Regular envelope</option>
+                <option value="single">One window</option>
+                <option value="double">Two windows</option>
+              </select>
+            </div>
+            <div class="rb-row">
+              <div class="custom-size hide" id="customSize"><label>Width <span class="sr-only">millimeters</span><input id="customW" type="number" min="75" max="500" step="0.1" aria-label="Custom width millimeters"></label><label>Height <span class="sr-only">millimeters</span><input id="customH" type="number" min="55" max="360" step="0.1" aria-label="Custom height millimeters"></label></div>
+              <button type="button" class="rb-sm" id="foldSettings">Page Setup</button>
+            </div>
+          </div>
+          <div class="window-help hide" id="windowHelp"><p>Addresses stay visible here for preview. For a mailing, print them on the letter behind the windows.</p><button type="button" id="editWindows" class="text-link" data-cmd="w">Adjust window positions</button></div>
+        </div>
+        <div class="ribbon-caption">Page Setup</div>
+      </div>
+      <div class="ribbon-group fold-controls hide" id="foldControls">
+        <div class="ribbon-controls">
+          <div>
+            <div class="fold-title">Fold guides <span class="guide-badge">Edge to line</span></div>
+            <div class="fold-radio" role="radiogroup" aria-label="Fold guides">
+              <label><input type="radio" name="foldMode" value="front"> Front</label>
+              <label><input type="radio" name="foldMode" value="back"> Back</label>
+              <label><input type="radio" name="foldMode" value="none"> Off</label>
+            </div>
+            <small id="foldExplanation">Align the paper edge with the printed line.</small>
+          </div>
+        </div>
+        <div class="ribbon-caption">Arrange</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-mailings" data-panel="mailings" role="tabpanel">
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="postageOpen" data-cmd="p"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-stamp"/></svg><span>Postage</span></button>
+        </div>
+        <div class="ribbon-caption">Create</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="batchOpen" data-cmd="r"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-people"/></svg><span>Select Recipients</span></button>
+          <button type="button" class="rb-sm" id="clearBatch">Clear List</button>
+        </div>
+        <div class="ribbon-caption">Start Mail Merge</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" id="printEnvelope" data-cmd="f"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-print"/></svg><span class="rb-label">Print</span></button>
+        </div>
+        <div class="ribbon-caption">Finish</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-review" data-panel="review" role="tabpanel">
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-lg" data-focus="sortingAssist" data-cmd="c"><svg class="rb-glyph" aria-hidden="true" viewBox="0 0 24 24"><use href="#i-check"/></svg><span>Check Address</span></button>
+        </div>
+        <div class="ribbon-caption">Proofing</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-view" data-panel="view" role="tabpanel">
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="view-btn active" data-view="envelope" title="Envelope front">Front</button>
+          <button type="button" class="view-btn" data-view="back" title="Envelope back">Back</button>
+          <button type="button" class="view-btn" data-view="insert" title="Letter front. Choose a window envelope first.">Letter</button>
+          <button type="button" class="view-btn" data-view="insertBack" title="Letter back. Choose a window envelope first.">Letter Back</button>
+        </div>
+        <div class="ribbon-caption">Views</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-sm is-on" id="toggleRulers" aria-pressed="true" data-cmd="r">Ruler</button>
+          <button type="button" class="rb-sm is-on" id="togglePane" aria-pressed="true" data-cmd="n">Properties</button>
+        </div>
+        <div class="ribbon-caption">Show</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="ribbon-controls">
+          <button type="button" class="rb-sm" id="zoomFit" data-cmd="z" title="Fit the page (Ctrl+0)">Fit Page</button>
+        </div>
+        <div class="ribbon-caption">Zoom</div>
+      </div>
+    </div>
+    <div class="ribbon-panel" id="panel-help" data-panel="help" role="tabpanel">
+      <div class="help-strip">
+        <p><strong>Print</strong>File, then Print. Choose Actual Size, 100%, and turn off headers, footers, and scaling.</p>
+        <p><strong>Move</strong>Click an object, drag it, or press the arrow keys. Hold Shift to nudge 0.25 mm.</p>
+        <p><strong>Delete</strong>Select a message, picture, or stamp, then press Delete. Addresses stay in Properties.</p>
+        <p><strong>Keys</strong>Ctrl+S saves. Ctrl+P opens Print. Ctrl+F1 hides the ribbon. Ctrl+0 fits the page. Alt shows KeyTips. F1 is Help.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="app-body">
+  <div class="backstage" id="backstage">
+    <button type="button" class="bs-back" id="backstageClose" aria-label="Back" title="Back"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+    <nav aria-label="File">
+      <button type="button" class="bs-link active" data-bs="info">Info</button>
+      <button type="button" class="bs-link" data-bs="print">Print</button>
+      <button type="button" class="bs-link" data-bs="export">Export</button>
+      <button type="button" class="bs-link" id="settingsOpen">Options</button>
+    </nav>
+    <div class="bs-content">
+      <section class="bs-page" data-bs-page="info">
+        <h1>Info</h1>
+        <div class="bs-product"><span class="app-mark" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><use href="#i-env"/></svg></span><div><strong>Envelope</strong><small>Version 4.0</small></div></div>
+        <dl class="bs-meta">
+          <div><dt>Saved</dt><dd id="bsSaved">Saved to this PC</dd></div>
+          <div><dt>Size</dt><dd id="bsSize">#10</dd></div>
+          <div><dt>Status</dt><dd id="bsReady">Ready</dd></div>
+        </dl>
+        <p class="bs-note">This mail piece is stored in this browser on this PC. Export a PDF or a project backup if you want a copy you can move.</p>
+      </section>
+      <section class="bs-page" data-bs-page="print" hidden>
+        <h1>Print</h1>
+        <button type="button" class="bs-print" id="printMain" title="Print"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-print"/></svg>Print</button>
+        <p class="bs-note">The page on the right is the preview. Print at Actual Size / 100%. Turn off headers, footers, and fit-to-page.</p>
+        <button type="button" class="bs-action" id="testPrint">Print Alignment Test</button>
+      </section>
+      <section class="bs-page" data-bs-page="export" hidden>
+        <h1>Export</h1>
+        <button type="button" class="bs-action" id="exportPdf"><span class="rb-label">Create PDF</span></button>
+        <button type="button" class="bs-action" id="exportPair"><span class="rb-label">Envelope Both Sides</span></button>
+        <p class="bs-note">Opens a PDF of the current side, or of both sides. Print that file at 100%.</p>
+      </section>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="editor" aria-label="Properties">
+      <div class="editor-head">
+        <div class="eyebrow">Properties</div>
+        <h1 id="surfaceToolTitle">Envelope front</h1>
+        <button type="button" class="pane-close" id="paneClose" aria-label="Close Properties">×</button>
+        <p id="surfaceToolNote">Each envelope side has its own design layers.</p>
+      </div>
+      <div class="editor-scroll">
+        <section class="form-section">
+          <div class="section-title"><h2>Recipient</h2><span class="required">Required</span></div>
+          <label for="recipientInput" class="input-label">Deliver to</label>
+          <textarea id="recipientInput" rows="4" spellcheck="false" placeholder="FULL NAME&#10;STREET ADDRESS&#10;CITY STATE ZIP"></textarea>
+          <div class="field-under"><span id="recipientStatus">Printed on envelope front</span><button type="button" class="text-link" id="resetRecipient">Reset position</button></div>
+          <label class="sort-toggle" for="sortingAssist"><input type="checkbox" id="sortingAssist" checked><span><strong>USPS Sorting Assist</strong><small>Print the address in clear uppercase. The text in this box stays as you typed it.</small></span></label>
+          <div class="sort-status" id="sortingChecks" aria-live="polite"></div>
+          <div class="merge-line" id="batchIndicator">Single envelope</div>
+        </section>
+        <section class="form-section">
+          <div class="section-title"><h2>Return address</h2><span class="required">Required</span></div>
+          <label for="senderInput" class="input-label">Return address</label>
+          <textarea id="senderInput" rows="4" spellcheck="false" placeholder="YOUR NAME&#10;STREET ADDRESS&#10;CITY STATE ZIP"></textarea>
+          <div class="field-under"><span id="senderStatus">Printed on envelope front</span><button type="button" class="text-link" id="resetSender">Reset position</button></div>
+        </section>
+        <details class="details-section" id="extrasSection">
+          <summary><span class="details-chevron" aria-hidden="true">⌄</span><strong>Messages</strong><span class="details-note">Custom text</span></summary>
+          <div class="details-content">
+            <div id="customTextList" class="custom-text-list"></div>
+            <button type="button" class="button full" id="addText">Add text</button>
+          </div>
+        </details>
+      </div>
+      <div class="editor-bottom">Recipient and return address stay in this pane. Pictures, messages, and postage can be deleted.</div>
+    </aside>
+    <main class="main">
+      <div class="doc-caption">
+        <h2 id="previewTitle">Envelope front</h2>
+        <p id="previewSubtitle">Click to select. Drag to move, or use the arrow keys.</p>
+      </div>
+      <div class="stage" id="stage">
+        <div class="sheet-stack">
+          <div class="ruler-corner" aria-hidden="true"></div>
+          <canvas class="ruler" id="rulerH" width="10" height="24" aria-hidden="true"></canvas>
+          <canvas class="ruler" id="rulerV" width="24" height="10" aria-hidden="true"></canvas>
+          <div class="stage-inner"><div id="pageWrapper" class="page-wrapper"><div id="page" class="paper"></div></div></div>
+        </div>
+      </div>
+      <div class="contextbar">
+        <div class="context-left">
+          <span class="selection-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#i-env"/></svg></span>
+          <div><strong id="selectionName">Recipient</strong><span id="selectionTip">Drag to move. Press an arrow key to nudge.</span></div>
+        </div>
+        <div class="context-right">
+          <label>X <input type="number" id="posX" step="0.5" aria-label="Horizontal position millimeters"></label>
+          <label>Y <input type="number" id="posY" step="0.5" aria-label="Vertical position millimeters"></label>
+          <span class="unit">mm</span>
+          <button type="button" class="button tiny danger hide" id="deleteSelected" title="Delete">Delete</button>
+          <button type="button" class="button tiny" id="resetSelected">Reset</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<footer class="statusbar">
+  <div class="status-left">
+    <span id="printReadiness" class="ready" aria-live="polite"><span class="ready-dot"></span> Ready</span>
+    <span class="status-sep" aria-hidden="true"></span>
+    <span id="dimensionsText">#10 · 9.5 × 4.125 in</span>
+  </div>
+  <div class="status-right">
+    <div class="status-views" aria-label="Views">
+      <button type="button" class="view-btn active" data-view="envelope" title="Envelope front">Front</button>
+      <button type="button" class="view-btn" data-view="back" title="Envelope back">Back</button>
+      <button type="button" class="view-btn" data-view="insert" title="Letter front">Letter</button>
+      <button type="button" class="view-btn" data-view="insertBack" title="Letter back">Letter Back</button>
+    </div>
+    <span class="status-sep" aria-hidden="true"></span>
+    <button type="button" class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+    <input class="zoom-range" id="zoomRange" type="range" min="20" max="160" value="100" aria-label="Zoom">
+    <button type="button" class="zoom-btn" id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+    <button type="button" id="zoomDisplay" title="Zoom. Click to fit the page.">100%</button>
+    <button type="button" data-click="zoomFit" title="Fit page">Fit</button>
+  </div>
+</footer>
+<div class="overlay" id="overlay" aria-hidden="true"><div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"><div class="drawer-head"><div><div class="sr-only" id="drawerEyebrow">TOOLS</div><h2 id="drawerTitle"></h2></div><button type="button" class="close" id="drawerClose" aria-label="Close">×</button></div><div id="drawerBody" class="drawer-body"></div></div></div>
+<div id="printHost"></div>
+<div id="toast" class="toast" role="status"></div>
+<button type="button" id="printInsert" class="hide">Print letter</button>
+</div>
+<noscript><p style="padding:16px;font-family:Segoe UI,sans-serif">Envelope needs JavaScript to lay out and print a mail piece.</p></noscript>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), MM=96/25.4, UNIT=72/25.4;
+const sizes={ '10':['#10 Commercial',241.3,104.775], '9':['#9 Commercial',225.425,98.425], 'monarch':['Monarch',190.5,98.425], '6_3_4':['#6¾',165.1,92.075], 'dl':['DL',220,110], 'c6':['C6',162,114], 'c5':['C5',229,162], 'a2':['A2 Invitation',146.05,111.125], 'a6':['A6 Invitation',165.1,120.65], 'a7':['A7 Invitation',184.15,133.35], 'square':['Square 6 × 6',152.4,152.4], 'custom':['Custom dimensions',241.3,104.775] };
+const INITIAL={size:'10',w:241.3,h:104.775,style:'plain',recipient:'JANE SMITH\n123 MAIN STREET\nBROOKLYN NY 11201',sender:'YOUR NAME\n123 RETURN STREET\nBROOKLYN NY 11201',font:'Arial',recipientFont:12,senderFont:9.5,recipientBold:false,senderBold:false,rect:{recipient:{x:83,y:49,w:125,h:43},sender:{x:13,y:13,w:111,h:28},stamp:{x:197,y:10,w:35,h:25}},windows:{recipient:{x:22.2,y:63.5,w:114.3,h:28.6},sender:{x:12.7,y:12.7,w:63.5,h:19.05}},windowShift:{recipient:{x:0,y:0},sender:{x:0,y:0}},insert:{sheet:'letter',panel:0,left:0,top:0},cal:{x:0,y:0},view:'envelope',extra:[],batchText:'',batchEnabled:false,batchIndex:0,sortingAssist:true,stampData:'',stampJpg:'',stampName:'',stampW:35,stampH:25,lineStyles:{recipient:{},sender:{}},design:[],logoData:'',pdfDpi:600,backDesign:[],insertDesign:[],insertBackDesign:[],surfaceBg:{envelope:"#ffffff",back:"#ffffff",insert:"#ffffff",insertBack:"#ffffff"},foldGuides:"front"};
+const clone=x=>JSON.parse(JSON.stringify(x));const escapeHTML=x=>String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const cleanNumber=(v,fallback)=>Number.isFinite(Number(v))?Number(v):fallback;
+let s=clone(INITIAL),selection='recipient',drag=null,scale=1,viewZoom=null,toastTimer=null,originalPdf=null;
+try{const saved=JSON.parse(localStorage.getItem('envelope-studio-v3')||'null');if(saved&&typeof saved==='object')s={...s,...saved,rect:{...s.rect,...saved.rect},windows:{...s.windows,...saved.windows},windowShift:{...s.windowShift,...saved.windowShift},insert:{...s.insert,...saved.insert},cal:{...s.cal,...saved.cal}};else{const old=JSON.parse(localStorage.getItem('envelope-studio-v1')||'null');if(old){s.recipient=old.recipientText||s.recipient;s.sender=old.senderText||s.sender;s.font=old.fontFamily?.includes('Georgia')?'Georgia':old.fontFamily?.includes('Courier')?'Courier New':'Arial';s.recipientFont=Number(old.recipientSize)||12;s.senderFont=Number(old.senderSize)||9.5;if(sizes[old.preset])s.size=old.preset;s.w=Number(old.w)||s.w;s.h=Number(old.h)||s.h;s.style=['none','single','double'].includes(old.windowsType)?old.windowsType==='none'?'plain':old.windowsType:'plain';if(old.windows)s.windows={...s.windows,...old.windows};if(old.positions)s.rect={...s.rect,...old.positions};if(old.stampData)s.stampData=old.stampData;if(old.batchText)s.batchText=old.batchText;s.batchEnabled=!!old.batchMode}}}catch(e){}
+s.lineStyles={recipient:s.lineStyles?.recipient||{},sender:s.lineStyles?.sender||{}};s.design=Array.isArray(s.design)?s.design:[];s.logoData=s.logoData||'';s.pdfDpi=+s.pdfDpi||600;s.extra=Array.isArray(s.extra)?s.extra:[];for(let r of ['recipient','sender']){s.rect[r]={...INITIAL.rect[r],...(s.rect[r]||{})};s.windows[r]={...INITIAL.windows[r],...(s.windows[r]||{})};s.windowShift[r]={...INITIAL.windowShift[r],...(s.windowShift[r]||{})}}s.rect.stamp={...INITIAL.rect.stamp,...(s.rect.stamp||{})};
+for(const key of ['backDesign','insertDesign','insertBackDesign'])s[key]=Array.isArray(s[key])?s[key]:[];
+s.surfaceBg={...INITIAL.surfaceBg,...(s.surfaceBg||{})};if(!['front','back','none'].includes(s.foldGuides))s.foldGuides='front';
+function save(){try{localStorage.setItem('envelope-studio-v3',JSON.stringify(s));$('saveIndicator').textContent='Saved to this PC'}catch(e){$('saveIndicator').textContent=e?.name==='QuotaExceededError'?'Storage full — export a backup':'Saved in this session only'}}
+// Sorting Assist is intentionally not an IMb generator. USPS accepts machine-readable
+// addresses without any barcode; an actual IMb requires a USPS-issued Mailer ID.
+function postalAddress(text){
+ if(!s.sortingAssist)return String(text||'');
+ return String(text||'').split(/\r?\n/).map(line=>line.trim().replace(/\s+/g,' ').replace(/[.,]/g,'').toUpperCase()).join('\n').trim();
+}
+function postalChecks(text){
+ const lines=postalAddress(text).split('\n').map(x=>x.trim()).filter(Boolean);
+ const issues=[];
+ if(!lines.length)return ['Enter a recipient address'];
+ if(lines.length<3)issues.push('Include recipient, street and city/state/ZIP lines');
+ const last=lines.at(-1)||'';
+ // ZIP+4 checked locally. We never claim an address is verified/DPV/CASS certified.
+ if(!/\b\d{5}(?:-\d{4})?\b/.test(last))issues.push('Check that the final line includes a 5-digit ZIP or ZIP+4');
+ if(!/\b[A-Z]{2} +\d{5}(?:-\d{4})?\b/.test(last))issues.push('Use CITY ST ZIP on the final line');
+ if(lines.some(l=>l.length>50))issues.push('One address line exceeds 50 characters; shorten if possible');
+ return issues;
+}
+function actualText(role,recipient){const raw=role==='recipient'?recipient:s.sender;return postalAddress(raw)}
+function checkWindowFit(role){
+ if(!hasWindow(role))return null;
+ const raw=role==='recipient'?actualRecipient():s.sender;const lines=postalAddress(raw).split('\n');
+ const box=winBox(role),r=getRect(role,'envelope');
+ const estimated=lines.reduce((total,line,i)=>{const st=styleFor(role,i);return total+st.size*25.4/72*st.lineHeight},0);
+ const minClear=3.175; // 1/8 inch target clearance; physical insert motion is user-dependent.
+ if(r.x-box.x<minClear||r.y-box.y<minClear||box.x+box.w-r.x-r.w<minClear||box.y+box.h-r.y-r.h<minClear)return `${role} window requires a 1/8-inch clear border`;
+ if(estimated>r.h || lines.some((x,i)=>{const st=styleFor(role,i);return x.length*(st.size*25.4/72*.54+st.spacing*25.4/72)>r.w}))return `${role} text may be too large for its window`;
+ return null;
+}
+function intersectBox(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y}
+function postalLayoutIssues(){
+ if(!s.sortingAssist)return [];
+ const issues=[];
+ // USPS letter barcode clear zone: lower-right 4-3/4 x 5/8 inches.
+ const clear={x:s.w-120.65,y:s.h-15.875,w:120.65,h:15.875};
+ const textbox=(role,t)=>{const r=getRect(role,'envelope'),pt=fontFor(role),lines=postalAddress(t).split('\n');if(role.startsWith('extra:'))return{x:r.x,y:r.y,w:Math.min(r.w,Math.max(1,...lines.map(line=>line.length*pt*25.4/72*.54))),h:lines.length*pt*25.4/72*1.35};return {x:r.x,y:r.y,w:Math.min(r.w,Math.max(1,...lines.map((line,i)=>{const st=styleFor(role,i);return line.length*(st.size*25.4/72*.54+st.spacing*25.4/72)}))),h:lines.reduce((sum,line,i)=>{const st=styleFor(role,i);return sum+st.size*25.4/72*st.lineHeight},0)}};
+ for(const role of ['sender','recipient']){
+   if(hasWindow(role))continue;
+   const t=role==='recipient'?actualRecipient():s.sender;
+   if(t.trim()&&intersectBox(textbox(role,t),clear))issues.push(`${role} text reaches the lower-right sorting zone`);
+ }
+ for(const ex of s.extra){if(ex.text?.trim()&&intersectBox(textbox('extra:'+ex.id,ex.text),clear)){issues.push('Custom text reaches the lower-right sorting zone');break}}
+ if(s.stampData&&intersectBox(getRect('stamp','envelope'),clear))issues.push('Postage artwork reaches the lower-right sorting zone');
+ issues.push(...designIssues());for(const role of ['recipient','sender']){if(!hasWindow(role))continue;const w=winBox(role);if(intersectBox(w,clear)&&w.y+w.h>clear.y+3.175)issues.push(`${role} window intrudes into the sorting zone`)}
+ return issues;
+}
+function sortStatus(){const el=$('sortingChecks');if(!el)return;const issues=postalChecks(actualRecipient()),wi=['recipient','sender'].map(checkWindowFit).filter(Boolean);if(!s.sortingAssist){el.textContent='Sorting Assist off. Original lettercase will be printed.';return}
+ const items=[...issues,...wi,...postalLayoutIssues()];el.innerHTML=items.length?items.slice(0,3).map(x=>`<span class="warn">⚠ ${escapeHTML(x)}</span>`).join(''):'<span class="ok">✓ Clear address format. USPS has not verified this address.</span>';
+}
+function toast(text){const el=$('toast');el.textContent=text;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),3300)}
+function size(surface=s.view){return ['insert','insertBack'].includes(surface)?(s.insert.sheet==='a4'?{w:210,h:297}:{w:215.9,h:279.4}):{w:s.w,h:s.h}}
+function hasWindow(role){return s.style==='double'||(s.style==='single'&&role==='recipient')}
+function winBox(role){return s.windows[role]}
+function printRole(role,surface){return surface==='insert'?hasWindow(role):surface==='envelope'?!hasWindow(role):false}
+function getRect(role,surface=s.view){if(role==='page')return {x:0,y:0,w:size(surface).w,h:size(surface).h};if(role==='stamp')return {...s.rect.stamp,w:s.stampW,h:s.stampH};if(role.startsWith('design:'))return {...(designCollection(surface).find(x=>x.id===role.slice(7))?.rect||{x:10,y:10,w:20,h:5})};if(role.startsWith('extra:'))return {...(s.extra.find(x=>x.id===role.slice(6))||{}).rect};if(hasWindow(role)){const box=winBox(role),n=s.windowShift[role],x=box.x+4+n.x,y=box.y+4+n.y,w=Math.max(8,box.w-8),h=Math.max(6,box.h-8);if(surface==='insert'){const o=size('insert'),ph=o.h/3;return{x:x-s.insert.left,y:y-s.insert.top+ph*s.insert.panel,w,h}}return{x,y,w,h}}return {...s.rect[role]}}
+function setPosition(role,x,y){if(role==='page')return;if(role==='stamp'){s.rect.stamp.x=x;s.rect.stamp.y=y}else if(role.startsWith('design:')){const d=designCollection().find(v=>v.id===role.slice(7));if(d){d.rect.x=x;d.rect.y=y}}else if(role.startsWith('extra:')){const e=s.extra.find(v=>v.id===role.slice(6));if(e){e.rect.x=x;e.rect.y=y}}else if(hasWindow(role)){const r=getRect(role);s.windowShift[role].x+=x-r.x;s.windowShift[role].y+=y-r.y}else{s.rect[role].x=x;s.rect[role].y=y}}
+function resetPosition(role){if(role==='page')return;if(role==='stamp')s.rect.stamp={...INITIAL.rect.stamp};else if(role.startsWith('design:')){const d=designCollection().find(v=>v.id===role.slice(7));if(d){d.rect.x=14;d.rect.y=40}}else if(role.startsWith('extra:')){let e=s.extra.find(x=>x.id===role.slice(6));if(e)e.rect={x:40,y:35,w:90,h:20}}else if(hasWindow(role))s.windowShift[role]={x:0,y:0};else s.rect[role]={...INITIAL.rect[role]};save();render();toast('Position restored')}
+function actualRecipient(){const rows=parseCSV(s.batchText);return s.batchEnabled&&rows.length?addressFromRow(rows[Math.min(rows.length-1,s.batchIndex||0)]):s.recipient}
+function activeText(role,recipient=actualRecipient()){if(role==='recipient')return recipient;if(role==='sender')return s.sender;if(role.startsWith('extra:'))return s.extra.find(e=>e.id===role.slice(6))?.text||'';return ''}
+function font(role){return role==='recipient'?s.recipientFont:role==='sender'?s.senderFont:10}
+function fontFor(role){return role.startsWith('extra:')?(s.extra.find(e=>e.id===role.slice(6))?.fontSize||10):font(role)}
+function isBold(role){return role==='sender'?!!s.senderBold:role==='recipient'?!!s.recipientBold:role.startsWith('extra:')?!!s.extra.find(e=>e.id===role.slice(6))?.bold:false}
+
+// ---------------- Styling & decor. Address fields remain permanent. -----------------
+const safeHex=c=>/^#[0-9a-f]{6}$/i.test(String(c))?c:'#25354a';
+function rgb(hex){const h=safeHex(hex).slice(1);return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)}
+function styleFor(role,i){const v=s.lineStyles?.[role]?.[i]||{};return{bold:v.bold===undefined?(i===0?!!s[role+'Bold']:false):!!v.bold,italic:!!v.italic,size:Math.max(6,Math.min(28,+v.size||font(role))),color:safeHex(v.color||'#25354a'),align:['left','center','right'].includes(v.align)?v.align:'left',spacing:Math.max(0,Math.min(3,+v.spacing||0)),lineHeight:Math.max(1,Math.min(2,+v.lineHeight||1.3))}}
+function addressMarkup(role,content){return String(content||'').split('\n').map((line,i)=>{const st=styleFor(role,i);return `<span class="address-line" style="font-size:${st.size}pt;font-weight:${st.bold?700:400};font-style:${st.italic?'italic':'normal'};color:${st.color};text-align:${st.align};letter-spacing:${st.spacing}pt;line-height:${st.lineHeight};">${escapeHTML(line)||'&nbsp;'}</span>`}).join('')}
+function openLineStyler(role){const label=role==='recipient'?'Recipient':'Sender',lines=(s[role]||'').split('\n');const content=lines.map((line,i)=>{const st=styleFor(role,i);return `<section class="line-editor" data-style-index="${i}"><div class="line-heading"><span class="line-number">${i+1}</span><strong>${escapeHTML(line||'Empty line')}</strong></div><div class="line-controls"><label><input type="checkbox" data-style="bold" ${st.bold?'checked':''}> <b>B</b> Bold</label><label><input type="checkbox" data-style="italic" ${st.italic?'checked':''}> <i>I</i> Italic</label><label>Size <input data-style="size" type="number" min="6" max="28" step=".5" value="${st.size}"></label><label>Ink <input data-style="color" type="color" value="${st.color}"></label><label>Align <select data-style="align"><option value="left" ${st.align==='left'?'selected':''}>Left</option><option value="center" ${st.align==='center'?'selected':''}>Center</option><option value="right" ${st.align==='right'?'selected':''}>Right</option></select></label><label>Letter space <input data-style="spacing" type="number" min="0" max="3" step=".1" value="${st.spacing}"></label><label>Line height <input data-style="lineHeight" type="number" min="1" max="2" step=".05" value="${st.lineHeight}"></label></div></section>`}).join('');openDrawer(label+' typography','ADDRESS DESIGN',`<div class="drawer-section"><p>Style each address line independently. The first line is usually the name. Your original text is never changed.</p><div class="style-advisory">For reliable USPS machine reading, keep destination lines high-contrast, simple and away from graphics. Dark ink is recommended.</div>${content}<div class="grid-two"><button class="button" id="resetLineStyles">Reset line styles</button><button class="button primary" id="finishLineStyles">Done</button></div></div>`);$('drawerBody').querySelectorAll('[data-style]').forEach(el=>{const change=()=>{const idx=+el.closest('[data-style-index]').dataset.styleIndex,key=el.dataset.style,kind=el.type;let value=kind==='checkbox'?el.checked:kind==='number'?+el.value:el.value;s.lineStyles[role][idx]={...s.lineStyles[role][idx],[key]:value};save();renderCanvas();$('recipientNameBold').checked=styleFor('recipient',0).bold;$('senderNameBold').checked=styleFor('sender',0).bold};el.addEventListener(el.type==='color'||el.type==='checkbox'||el.tagName==='SELECT'?'change':'input',change)});$('resetLineStyles').onclick=()=>{s.lineStyles[role]={};s[role+'Bold']=false;save();renderCanvas();closeDrawer();toast('Line styles reset')};$('finishLineStyles').onclick=closeDrawer}
+function designCollection(surface=s.view){return surface==='back'?s.backDesign:surface==='insert'?s.insertDesign:surface==='insertBack'?s.insertBackDesign:s.design}
+function activeBg(surface=s.view){return safeHex(s.surfaceBg?.[surface]||'#ffffff')}
+function surfaceName(surface=s.view){return ({envelope:'Envelope front',back:'Envelope back',insert:'Letter front',insertBack:'Letter back'})[surface]||'Envelope front'}
+function isLetterSurface(surface=s.view){return surface==='insert'||surface==='insertBack'}
+function foldPositions(surface){if(!isLetterSurface(surface))return [];const o=size(surface),p=o.h/3;return [p,2*p]}
+function foldHTML(surface){if(!isLetterSurface(surface))return '';if(s.foldGuides!==(surface==='insert'?'front':'back'))return '';const [a,b]=foldPositions(surface);return `<div class="fold-guide marker-1" style="top:${a}mm"><span class="fold-dot"></span><small>① ALIGN BOTTOM EDGE HERE</small></div><div class="fold-guide marker-2" style="top:${b}mm"><span class="fold-dot"></span><small>② ALIGN TOP EDGE HERE</small></div>`}
+function foldPrintHTML(surface){if(!isLetterSurface(surface)||s.foldGuides!==(surface==='insert'?'front':'back'))return '';const wrap=document.createElement('div');wrap.style.cssText='position:absolute;inset:0;pointer-events:none;';wrap.innerHTML=foldHTML(surface);return wrap}
+function surfaceWarnings(surface=s.view){const warnings=[];if(isLetterSurface(surface)){const o=size(surface);if(o.h/3>s.h-3)warnings.push('Folded letter is taller than this envelope. Try smaller paper or a larger envelope.');if(o.w>s.w-3)warnings.push('Sheet is wider than envelope. Fold or trim the sides to fit.')}return warnings}
+function designMarkup(interactive,surface=s.view){return designCollection(surface).map(d=>{const r=d.rect,role='design:'+d.id,style=`${cssPos(r)}--design-color:${safeHex(d.color)};--design-stroke:${d.stroke||.8}mm;${d.filled?'--design-filled:1;':''}`;let content='';if(d.type==='logo'||d.type==='image'){const src=d.src||(surface==='envelope'?s.logoData:'');if(src)content=`<img class="logo-content" src="${src}" draggable="false" alt="Design artwork">`}if(d.type==='text'){content=`<div style="font-family:${escapeHTML(d.font||s.font)};font-weight:${d.bold?700:400};font-style:${d.italic?'italic':'normal'};font-size:${d.fontSize||12}pt;color:${safeHex(d.color)};white-space:pre-wrap;line-height:1.22;">${escapeHTML(d.text||'Text')}</div>`}return `<div class="design-item design-${d.type==='image'?'logo':d.type} ${d.type==='text'?'design-text':''} ${selection===role&&interactive?'selected':''}" ${interactive?`tabindex="0" data-role="${role}" role="group" aria-label="Editable ${escapeHTML(d.type)}"`:''} style="${style}">${content}${interactive?`<button type="button" class="canvas-delete" data-delete-canvas="${role}" title="Delete element" aria-label="Delete element">×</button>`:''}</div>`}).join('')}
+function renderPrintDesign(layer,surface=s.view){const host=document.createElement('div');host.style.cssText='position:absolute;inset:0;';host.innerHTML=designMarkup(false,surface);layer.appendChild(host)}
+function addDesign(type,color='#315b88',rect=null,surface=s.view){const id='d'+Math.random().toString(36).slice(2,9),paper=size(surface);const base={line:{x:14,y:42,w:49,h:0},rect:{x:12,y:11,w:65,h:42},text:{x:24,y:Math.min(paper.h-32,55),w:Math.min(130,paper.w-35),h:23},image:{x:15,y:13,w:48,h:22},logo:{x:15,y:13,w:48,h:22}}[type]||{x:14,y:42,w:50,h:0};const d={id,type,color,stroke:.7,filled:false,text:'Your custom text',fontSize:12,bold:false,italic:false,font:s.font,rect:rect||base};designCollection(surface).push(d);selection='design:'+id;save();render();return d}
+function designIssues(){const issues=[];const postalClear={x:s.w-120.65,y:s.h-15.875,w:120.65,h:15.875};for(const d of s.design){const r={...d.rect,w:Math.max(d.rect.w,(d.stroke||.7)*.7),h:Math.max(d.rect.h,(d.stroke||.7)*.7)};if(r.x<0||r.y<0||r.x+r.w>s.w||r.y+r.h>s.h)issues.push('Decoration extends beyond envelope');if(intersectBox(r,postalClear))issues.push('Decoration enters lower-right postal barcode clear zone');for(const role of ['recipient','sender']){const b=hasWindow(role)?winBox(role):getRect(role,'envelope');if(intersectBox(r,b))issues.push('Decoration overlaps '+role+(hasWindow(role)?' window':' address'))}if(s.stampData&&intersectBox(r,getRect('stamp','envelope')))issues.push('Decoration overlaps postage')}return [...new Set(issues)]}
+
+function designPreset(kind){const items=designCollection();if(kind==='none'){items.length=0;if(s.view==='envelope')s.logoData=''}else{const kept=items.filter(d=>['logo','image','text'].includes(d.type));items.splice(0,items.length,...kept)}if(kind==='underline'){addDesign('line','#234e89',{x:12,y:43,w:49,h:0})}if(kind==='corner'){addDesign('line','#234e89',{x:11,y:8,w:38,h:0});addDesign('line','#234e89',{x:11,y:8,w:0,h:20})}if(kind==='frame'){const o=size();addDesign('rect','#c7d4e5',{x:6,y:6,w:o.w-12,h:o.h-16})}save();render();toast('Design preset applied. Review postal clearance warnings.')}
+function openDesign(){const surface=s.view;openDrawer('Design '+surfaceName(surface).toLowerCase(),'DESIGN WORKSPACE',`<div class="drawer-section"><h3>Design every inch</h3><p>Elements stay on this ${isLetterSurface(surface)?'letter side':'envelope side'} only. Use the tabs to work on the other side. Postal clear-zone checks apply to the address face.</p><div class="design-presets"><button class="button" data-preset="none">Clear artwork</button><button class="button" data-preset="underline">Accent line</button><button class="button" data-preset="corner">Corner accent</button><button class="button" data-preset="frame">Border</button></div><div class="soft-divider"></div><div class="grid-two"><button class="button" id="addDesignText">+ Text box</button><button class="button" id="addRule">+ Line</button><button class="button" id="addFrame">+ Rectangle</button><label class="button" for="uploadLogo" style="cursor:pointer">+ Image / logo</label></div><input id="uploadLogo" type="file" class="sr-only" accept="image/png,image/jpeg"><p class="soft-small">Edit the text box content below, including paragraphs and line breaks. Text wraps to the box width in print and PDF. Drag items directly on the sheet.</p><div id="designObjectList"></div><div class="note-card" id="designWarnings"></div></div>`);
+ document.querySelectorAll('[data-preset]').forEach(el=>el.onclick=()=>{designPreset(el.dataset.preset);renderDesignList()});$('addDesignText').onclick=()=>{addDesign('text');renderDesignList()};$('addRule').onclick=()=>{addDesign('line');renderDesignList()};$('addFrame').onclick=()=>{addDesign('rect');renderDesignList()};$('uploadLogo').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(!/^image\/(png|jpeg)$/.test(file.type)||file.size>8e6)return toast('Choose a PNG or JPG under 8 MB');const src=await fileToData(file),im=await imageFromData(src),cv=document.createElement('canvas'),k=Math.min(1,2200/Math.max(im.naturalWidth,im.naturalHeight));cv.width=Math.max(1,Math.round(im.naturalWidth*k));cv.height=Math.max(1,Math.round(im.naturalHeight*k));cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);const d=addDesign('image');d.src=cv.toDataURL('image/png');d.rect.w=Math.min(95,Math.max(15,26*im.naturalWidth/im.naturalHeight));d.rect.h=26;save();render();renderDesignList()};renderDesignList()}
+function renderDesignList(){const host=$('designObjectList');if(!host)return;host.innerHTML=designCollection().map((d,i)=>`<div class="design-entry" data-design-id="${d.id}"><div class="line-heading"><strong>${i+1}. ${d.type==='text'?'Text box':d.type==='image'?'Image':d.type==='line'?'Line':d.type==='rect'?'Rectangle':'Logo'}</strong><button class="text-link danger" data-remove-design="${d.id}">Delete</button></div>${d.type==='text'?`<label class="input-label">Text content<textarea rows="3" data-design-prop="text">${escapeHTML(d.text||'')}</textarea></label>`:''}<div class="design-fields"><label>X mm<input data-design-prop="x" type="number" step=".5" value="${d.rect.x}"></label><label>Y mm<input data-design-prop="y" type="number" step=".5" value="${d.rect.y}"></label><label>Width mm<input data-design-prop="w" type="number" min="0" step=".5" value="${d.rect.w}"></label><label>Height mm<input data-design-prop="h" type="number" min="0" step=".5" value="${d.rect.h}"></label>${d.type==='image'||d.type==='logo'?'':`<label>Ink<input data-design-prop="color" type="color" value="${safeHex(d.color)}"></label>`}${d.type==='line'||d.type==='rect'?`<label>Stroke mm<input data-design-prop="stroke" type="number" min=".2" max="4" step=".1" value="${d.stroke||.7}"></label>`:''}${d.type==='text'?`<label>Type size<input data-design-prop="fontSize" type="number" min="6" max="64" step=".5" value="${d.fontSize||12}"></label><label>Typeface<select data-design-prop="font"><option ${d.font==='Arial'?'selected':''}>Arial</option><option ${d.font==='Georgia'?'selected':''}>Georgia</option><option ${d.font==='Courier New'?'selected':''}>Courier New</option><option ${d.font==='Times New Roman'?'selected':''}>Times New Roman</option></select></label><label><input data-design-prop="bold" type="checkbox" ${d.bold?'checked':''}> Bold</label><label><input data-design-prop="italic" type="checkbox" ${d.italic?'checked':''}> Italic</label>`:''}${d.type==='rect'?`<label><input data-design-prop="filled" type="checkbox" ${d.filled?'checked':''}> Fill</label>`:''}</div></div>`).join('');host.querySelectorAll('[data-design-prop]').forEach(el=>{const change=()=>{const d=designCollection().find(x=>x.id===el.closest('[data-design-id]').dataset.designId),prop=el.dataset.designProp;if(!d)return;const val=el.type==='checkbox'?el.checked:el.type==='color'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'?el.value:Number(el.value);if(['x','y','w','h'].includes(prop))d.rect[prop]=val;else d[prop]=val;save();renderCanvas();showDesignWarnings()};el.addEventListener(el.tagName==='TEXTAREA'?'input':'change',change)});host.querySelectorAll('[data-remove-design]').forEach(el=>el.onclick=()=>{deleteCanvasItem('design:'+el.dataset.removeDesign);renderDesignList()});showDesignWarnings()}
+function showDesignWarnings(){const el=$('designWarnings');if(!el)return;const issues=s.view==='envelope'?designIssues():surfaceWarnings();el.innerHTML=issues.length?`<strong>Check before printing:</strong> ${issues.map(escapeHTML).join('; ')}.`:'✓ No obvious layout problems detected. Printable margins still depend on your printer.'}
+
+function removeCustom(id){s.extra=s.extra.filter(e=>e.id!==id);if(selection==='extra:'+id)selection='recipient';drag=null;save();render();toast('Custom message deleted')}
+function removeStamp(){if(!s.stampData)return; s.stampData='';s.stampJpg='';s.stampName='';if(selection==='stamp')selection='recipient';drag=null;save();render();const name=$('importedStampName');if(name)name.textContent='No postage image added';toast('Stamp removed from this envelope. The purchased original remains yours.')}
+function deleteCanvasItem(role=selection){if(role.startsWith('design:')){const a=designCollection();a.splice(0,a.length,...a.filter(d=>d.id!==role.slice(7)));if(s.view==='envelope'&&!a.some(d=>d.type==='logo'))s.logoData='';if(selection===role)selection='recipient';save();render();toast('Decoration removed');return true}if(role.startsWith('extra:')){const id=role.slice(6);if(s.extra.some(e=>e.id===id)){removeCustom(id);return true}}else if(role==='stamp'&&s.stampData){removeStamp();return true}return false} 
+function renderCustomList(){const host=$('customTextList');if(!host)return;host.innerHTML=s.extra.map(e=>`<div class="custom-text-item"><span class="custom-text-label" title="${escapeHTML(e.text)}">${escapeHTML(e.text?.slice(0,40)||'Untitled message')}</span><button class="button" data-edit-extra="${escapeHTML(e.id)}">Edit</button><button class="button danger" data-delete-extra="${escapeHTML(e.id)}" aria-label="Delete custom message">Delete</button></div>`).join('');host.querySelectorAll('[data-edit-extra]').forEach(b=>b.onclick=()=>openExtra(b.dataset.editExtra));host.querySelectorAll('[data-delete-extra]').forEach(b=>b.onclick=()=>removeCustom(b.dataset.deleteExtra))}
+function renderInputs(){const preset=$('sizePreset');preset.innerHTML=Object.entries(sizes).map(([k,v])=>`<option value="${k}">${escapeHTML(v[0])} · ${(v[1]/25.4).toFixed(2)} × ${(v[2]/25.4).toFixed(2)} in</option>`).join('');preset.value=s.size;$('styleSelect').value=s.style;$('customSize').classList.toggle('hide',s.size!=='custom');$('customW').value=+s.w.toFixed(2);$('customH').value=+s.h.toFixed(2);$('recipientInput').value=s.recipient;$('senderInput').value=s.sender;$('sortingAssist').checked=s.sortingAssist!==false;$('fontSelect').value=s.font;$('recipientFont').value=s.recipientFont;$('senderFont').value=s.senderFont;$('recipientNameBold').checked=!!styleFor('recipient',0).bold;$('senderNameBold').checked=!!styleFor('sender',0).bold;$('windowHelp').classList.toggle('hide',s.style==='plain');$('batchIndicator').textContent=s.batchEnabled?`${parseCSV(s.batchText).length} recipients loaded`:'Single envelope';document.querySelectorAll('[data-style-pick]').forEach(b=>{const on=b.dataset.stylePick===s.style;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false')});if($('docTitle')){const name=s.batchEnabled?'Mail merge':'Envelope 1';$('docTitle').textContent=name;document.title=name+' - Envelope'}$('recipientInput').style.fontFamily=s.font;$('senderInput').style.fontFamily=s.font;$('fontSelect').style.fontFamily=s.font;syncViewButtons()}
+function addLetterTemplate(){const o=size('insert');if(s.style==='plain')return toast('Choose a window envelope to design a letter');const col=s.insertDesign;const id=()=>('d'+Math.random().toString(36).slice(2,9));const text=(content,rect,fontsize=11,bold=false,color='#24354e')=>({id:id(),type:'text',text:content,rect,fontSize:fontsize,bold,italic:false,color,font:s.font});const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});const x=19,w=Math.max(120,o.w-38),bodyY=Math.max(110,o.h/3+18);col.push(text(date,{x,y:20,w,h:9},10,false,'#60738c'));col.push(text('RE: Your correspondence',{x,y:bodyY,w,h:12},12,true));col.push(text('Dear Recipient,\n\nWrite your letter here. Every line and paragraph can be edited using the design tools. Keep the address area clear so it remains visible through the window.\n\nSincerely,\nYour Name',{x,y:bodyY+19,w,h:Math.max(45,o.h-bodyY-39)},11));selection='design:'+col[col.length-1].id;s.view='insert';save();render();toast('Editable letter template added. Open Design this side to edit its text.')}
+function setLabel(id,text){const el=$(id);if(!el)return;const lab=el.querySelector('.rb-label');if(lab)lab.textContent=text;else el.textContent=text}function syncViewButtons(){if(s.style==='plain'&&isLetterSurface(s.view))s.view='envelope';const items=document.querySelectorAll('[data-view]');items.forEach(b=>{b.disabled=isLetterSurface(b.dataset.view)&&s.style==='plain';b.classList.toggle('active',b.dataset.view===s.view)});$('previewTitle').textContent=surfaceName();$('previewSubtitle').textContent=s.view==='envelope'?(s.style==='plain'?'Click to select. Drag to move, or use the arrow keys.':'Window addresses print on the letter front, not the envelope face.'):s.view==='back'?'Design the reverse of the envelope. Print separately and test the feed orientation.':s.view==='insert'?'Design the entire letter. Addresses remain positioned inside the windows.':'Design the reverse of your letter; back-side fold guides print here when enabled.';
+$('printInsert').classList.add('hide');setLabel('printEnvelope','Print');$('recipientStatus').textContent=hasWindow('recipient')?'Shows through window on letter front':'Printed on envelope front';$('senderStatus').textContent=hasWindow('sender')?'Shows through window on letter front':'Printed on envelope front';$('surfaceToolTitle').textContent=surfaceName();$('surfaceToolNote').textContent=isLetterSurface()?'Use the full sheet for your letter, including graphics and custom text.':'Each envelope side has its own design layers.';$('surfaceBg').value=activeBg();$('foldControls').classList.toggle('hide',s.style==='plain');document.querySelectorAll('[name="foldMode"]').forEach(el=>el.checked=s.foldGuides===el.value);if(s.style!=='plain')$('foldExplanation').textContent=`Guides: ${s.foldGuides==='front'?'letter front':s.foldGuides==='back'?'letter back':'not printed'}. Bottom edge to line 1 (${(size('insert').h/3).toFixed(1)} mm from top); top edge to line 2 (${(size('insert').h*2/3).toFixed(1)} mm). Print at 100%.`;
+setLabel('designOpen','Design Pane');setLabel('exportPair',isLetterSurface()?'Letter Both Sides':'Envelope Both Sides')}
+
+function fitScale(surface){const z=$('stage'),o=size(surface);const cs=getComputedStyle(z);const padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);const padY=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);const chrome=document.body.classList.contains('rulers-off')?0:28;const availW=z.clientWidth-padX-chrome-8,availH=z.clientHeight-padY-chrome-8;let fit=Math.min(1.35,Math.max(.2,Math.min(availW/(o.w*MM),availH/(o.h*MM))));if(!Number.isFinite(fit)||fit<=0)fit=.5;const used=viewZoom==null?fit:Math.min(1.6,Math.max(.2,viewZoom));const slider=$('zoomRange');if(slider)slider.value=Math.round(used*100);return used}function drawRulers(){const h=$('rulerH'),v=$('rulerV');if(!h||!v||document.body.classList.contains('rulers-off'))return;const o=size(),sc=scale||1,dpr=window.devicePixelRatio||1;paintRuler(h,Math.max(1,o.w*MM*sc),24,true,o.w,sc,dpr);paintRuler(v,24,Math.max(1,o.h*MM*sc),false,o.h,sc,dpr)}function paintRuler(canvas,cssW,cssH,horizontal,mmLen,sc,dpr){canvas.width=Math.max(1,Math.round(cssW*dpr));canvas.height=Math.max(1,Math.round(cssH*dpr));canvas.style.width=cssW+'px';canvas.style.height=cssH+'px';const ctx=canvas.getContext('2d');if(!ctx)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#f3f2f1';ctx.fillRect(0,0,cssW,cssH);ctx.strokeStyle='#d2d0ce';ctx.beginPath();if(horizontal){ctx.moveTo(0,cssH-.5);ctx.lineTo(cssW,cssH-.5)}else{ctx.moveTo(cssW-.5,0);ctx.lineTo(cssW-.5,cssH)}ctx.stroke();ctx.font='10px "Segoe UI",sans-serif';ctx.fillStyle='#323130';ctx.strokeStyle='#605e5c';ctx.lineWidth=1;const pxPerIn=96*sc,inches=mmLen/25.4;for(let i=0;i<=inches+0.001;i+=0.125){const pos=i*pxPerIn;const eighth=Math.round(i*8);const major=eighth%8===0,mid=eighth%4===0;const len=major?14:mid?9:5;ctx.beginPath();if(horizontal){ctx.moveTo(Math.round(pos)+.5,cssH);ctx.lineTo(Math.round(pos)+.5,cssH-len)}else{ctx.moveTo(cssW,Math.round(pos)+.5);ctx.lineTo(cssW-len,Math.round(pos)+.5)}ctx.stroke();if(major){const label=String(Math.round(i));if(horizontal)ctx.fillText(label,pos+3,11);else{ctx.save();ctx.translate(11,pos+3);ctx.rotate(-Math.PI/2);ctx.fillText(label,0,0);ctx.restore()}}}}
+function cssPos(r){return`left:${r.x}mm;top:${r.y}mm;width:${r.w}mm;height:${r.h}mm;`}
+function renderCanvas(){syncViewButtons();const o=size(),z=$('pageWrapper'),page=$('page');scale=fitScale(s.view);z.style.width=(o.w*MM*scale)+'px';z.style.height=(o.h*MM*scale)+'px';page.style.width=o.w+'mm';page.style.height=o.h+'mm';page.style.transform=`scale(${scale})`;page.className='paper '+(isLetterSurface()?'paper-insert':'paper-envelope');page.style.backgroundColor=activeBg();let out='';
+if(s.view==='envelope'){out+='<div class="safety-outline"></div>';for(const role of ['recipient','sender'])if(hasWindow(role)){const box=winBox(role);out+=`<div class="window-shape" style="${cssPos(box)}"></div>`}}
+if(isLetterSurface()){out+=`<div class="side-badge">${s.insert.sheet==='a4'?'A4':'US LETTER'} · ${s.view==='insert'?'FRONT':'BACK'}</div>`;out+=foldHTML(s.view);if(s.view==='insert')for(const role of ['recipient','sender'])if(hasWindow(role)){const a=winBox(role),r=getRect(role,'insert');out+=`<div class="insert-window" style="${cssPos({x:r.x-4-s.windowShift[role].x,y:r.y-4-s.windowShift[role].y,w:a.w,h:a.h})}"></div>`}}else if(s.view==='back')out+='<div class="side-badge">ENVELOPE · BACK</div>';
+out+=designMarkup(true,s.view);
+if(['envelope','insert'].includes(s.view))for(const role of ['sender','recipient']){if(!printRole(role,s.view)&&!(s.view==='envelope'&&hasWindow(role)))continue;const r=getRect(role,s.view),text=postalAddress(activeText(role)),empty=!text.trim();out+=`<div tabindex="0" role="button" aria-label="Position ${role} address" data-role="${role}" class="address-block ${empty?'placeholder':''} ${selection===role?'selected':''} ${hasWindow(role)?'through-window':''}" style="${cssPos(r)}font-family:${s.font};">${text.trim()?addressMarkup(role,text):escapeHTML((role==='recipient'?'Recipient':'Sender')+' address')}</div>`}
+if(s.view==='envelope'){for(const ex of s.extra){out+=`<div tabindex="0" role="group" aria-label="Custom message" data-role="extra:${escapeHTML(ex.id)}" class="address-block extra-block ${selection==='extra:'+ex.id?'selected':''}" style="${cssPos(ex.rect)}font-family:${s.font};font-size:${ex.fontSize||10}pt;font-weight:${isBold('extra:'+ex.id)?700:400};">${escapeHTML(ex.text||'Custom text')}<button type="button" class="canvas-delete" data-delete-canvas="extra:${escapeHTML(ex.id)}" title="Delete message">×</button></div>`}if(s.stampData){out+=`<div tabindex="0" role="group" aria-label="Imported postage" data-role="stamp" class="stamp-wrapper ${selection==='stamp'?'selected':''}" style="${cssPos(getRect('stamp'))}"><img draggable="false" alt="Purchased postage artwork" class="stamp-art" src="${s.stampData}"><button type="button" class="canvas-delete" data-delete-canvas="stamp" title="Remove postage">×</button></div>`}else out+='<div class="postage-placeholder">Postage</div>'}
+page.innerHTML=out;page.querySelectorAll('[data-role]').forEach(el=>{el.addEventListener('pointerdown',startDrag);el.addEventListener('focus',()=>{selection=el.dataset.role;page.querySelectorAll('.selected').forEach(n=>n.classList.remove('selected'));el.classList.add('selected');updateContext()})});page.querySelectorAll('[data-delete-canvas]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();deleteCanvasItem(button.dataset.deleteCanvas)})});updateContext();renderCustomList();updateReady();sortStatus();$('dimensionsText').textContent=`${isLetterSurface()?(s.insert.sheet==='a4'?'A4':'US Letter'):(sizes[s.size]?.[0]||'Custom')} · ${(o.w/25.4).toFixed(2)} × ${(o.h/25.4).toFixed(2)} in`;$('zoomDisplay').textContent=Math.round(scale*100)+'%';drawRulers()}
+
+function startDrag(e){if(e.button!==0&&e.pointerType==='mouse')return;
+ const role=e.currentTarget.dataset.role;selection=role;const r=getRect(role);
+ // Without this, a focused address input intercepts Backspace after selecting a canvas element.
+ if(document.activeElement&&document.activeElement!==document.body&&typeof document.activeElement.blur==='function')document.activeElement.blur();
+ drag={role,x:r.x,y:r.y,mx:e.clientX,my:e.clientY};e.preventDefault();renderCanvas();
+}
+window.addEventListener('pointermove',e=>{if(!drag)return;let x=drag.x+(e.clientX-drag.mx)/(scale*MM),y=drag.y+(e.clientY-drag.my)/(scale*MM);setPosition(drag.role,Math.round(x*4)/4,Math.round(y*4)/4);renderCanvas()});window.addEventListener('pointerup',()=>{if(drag){drag=null;save()}});
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&$('overlay').classList.contains('open'))return closeDrawer();
+ if($('overlay').classList.contains('open'))return;
+ if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&(e.key==='p'||e.key==='P')){e.preventDefault();document.body.classList.add('backstage-open');const ft=document.getElementById('fileTab');if(ft)ft.classList.add('is-open');const nav=document.querySelector('[data-bs="print"]');if(nav)nav.click();requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));return}
+ if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&(e.key==='s'||e.key==='S')){e.preventDefault();save();toast('Saved to this PC');return}
+ if((e.ctrlKey||e.metaKey)&&e.key==='0'){e.preventDefault();viewZoom=null;renderCanvas();return}
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ const focused=document.activeElement;
+ // Never interfere with editing address fields, file pickers or buttons outside the canvas.
+ if(focused?.matches?.('input,textarea,select,[contenteditable="true"]'))return;
+ if(focused?.tagName==='BUTTON'&&!focused.closest('#page'))return;
+ if(e.key==='Delete'||e.key==='Backspace'){
+   if(deleteCanvasItem()){e.preventDefault();e.stopPropagation()}
+   return;
+ }
+ const dir={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!dir)return;const r=getRect(selection),step=e.shiftKey?.25:1;setPosition(selection,r.x+dir[0]*step,r.y+dir[1]*step);e.preventDefault();save();renderCanvas()});
+function updateContext(){const r=getRect(selection);$('selectionName').textContent=selection==='page'?'Page':selection==='recipient'?'Recipient':selection==='sender'?'Return address':selection==='stamp'?'Postage':selection.startsWith('design:')?'Drawing':'Message';$('selectionTip').textContent=selection==='page'?'Click an item on the page.':selection==='stamp'?'Press Delete to remove postage.':selection.startsWith('design:')?'Drag to move. Delete removes it.':selection.startsWith('extra:')?'Press Delete to remove this message.':'Drag to move. Arrow keys nudge. Shift+arrow nudges 0.25 mm.';$('posX').value=(r.x||0).toFixed(1);$('posY').value=(r.y||0).toFixed(1);$('deleteSelected').classList.toggle('hide',!(selection.startsWith('extra:')||selection.startsWith('design:')||selection==='stamp'&&!!s.stampData))}
+function updateReady(){let warnings=[];warnings.push(...designIssues());if(s.sortingAssist){warnings.push(...postalChecks(actualRecipient()));warnings.push(...postalLayoutIssues());for(const role of ['recipient','sender'])for(const [i] of postalAddress(activeText(role)).split('\n').entries()){const st=styleFor(role,i),c=rgb(st.color),contrast=.2126*c[0]+.7152*c[1]+.0722*c[2];if(contrast>.52||st.size<8){warnings.push(role+' line '+(i+1)+' may be difficult for USPS machines to read');break}}}if(!actualRecipient().trim())warnings.push('Recipient address is empty');if(!s.sender.trim())warnings.push('Return address is empty');const o=size();for(const role of ['recipient','sender']){if(s.view==='insert'&&!hasWindow(role))continue;const r=getRect(role);if(r.x<0||r.y<0||r.x+r.w>o.w||r.y+r.h>o.h)warnings.push(`${role} text is outside the page`);if(hasWindow(role)){const bad=checkWindowFit(role);if(bad)warnings.push(bad);const box=winBox(role);const shift=s.windowShift[role];if(Math.abs(shift.x)>7||Math.abs(shift.y)>7)warnings.push(`${role} may be outside its window`)}}const t=$('printReadiness');t.classList.toggle('has-warning',!!warnings.length);t.innerHTML=`<span class="ready-dot"></span> ${warnings.length?warnings[0]:'Ready'}`;t.title=warnings.join('; ')}
+function render(){renderCanvas()}
+function parseCSV(text){if(!text.trim())return [];let rows=[],current=[],value='',quote=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quote&&text[i+1]==='"'){value+='"';i++}else quote=!quote}else if(c===','&&!quote){current.push(value.trim());value=''}else if((c==='\r'||c==='\n')&&!quote){if(c==='\r'&&text[i+1]==='\n')i++;current.push(value.trim());if(current.some(Boolean))rows.push(current);current=[];value=''}else value+=c}current.push(value.trim());if(current.some(Boolean))rows.push(current);if(rows.length<2)return[];const head=rows.shift().map(x=>x.toLowerCase().trim());return rows.filter(r=>r.some(Boolean)).slice(0,500).map(arr=>Object.fromEntries(head.map((h,i)=>[h,arr[i]||''])))}
+function addressFromRow(r){if(r.recipient)return r.recipient.replace(/\\n/g,'\n');return[r.name||r.full_name||r.recipient_name,r.company,r.address1||r.street,r.address2||r.apt,[r.city,r.state,r.zip||r.postal].filter(Boolean).join(' ')].filter(Boolean).join('\n')}
+function addresses(){let data=parseCSV(s.batchText);return s.batchEnabled&&data.length?data.map(addressFromRow):[s.recipient]}
+function initListeners(){for(const el of document.querySelectorAll('[data-view]'))el.onclick=()=>{s.view=el.dataset.view;selection=['back','insertBack'].includes(s.view)?'page':'recipient';save();render()};$('sizePreset').onchange=e=>{s.size=e.target.value;const d=sizes[s.size];if(s.size!=='custom'){s.w=d[1];s.h=d[2]}renderInputs();save();render()};$('styleSelect').onchange=e=>{s.style=e.target.value;if(s.style==='plain'&&isLetterSurface())s.view='envelope';selection='recipient';renderInputs();save();render()};for(const [id,key] of [['customW','w'],['customH','h']])$(id).onchange=e=>{s[key]=Math.max(60,Math.min(500,cleanNumber(e.target.value,s[key])));save();render()};for(const [id,key] of [['recipientInput','recipient'],['senderInput','sender']])$(id).oninput=e=>{s[key]=e.target.value;save();renderCanvas()};for(const [id,role] of [['resetRecipient','recipient'],['resetSender','sender']])$(id).onclick=()=>resetPosition(role);$('fontSelect').onchange=e=>{s.font=e.target.value;save();render()};for(const [id,key] of [['recipientFont','recipientFont'],['senderFont','senderFont']])$(id).oninput=e=>{s[key]=Math.min(28,Math.max(6,cleanNumber(e.target.value,s[key])));save();renderCanvas()};for(const role of ['sender','recipient']){$(role+'NameBold').onchange=e=>{s.lineStyles[role][0]={...s.lineStyles[role][0],bold:e.target.checked};save();renderCanvas()};$('style'+role[0].toUpperCase()+role.slice(1)).onclick=()=>openLineStyler(role)}$('designOpen').onclick=openDesign;$('deleteSelected').onclick=()=>deleteCanvasItem();$('sortingAssist').onchange=e=>{s.sortingAssist=e.target.checked;save();render()};$('editWindows').onclick=openSettings;$('settingsOpen').onclick=()=>{document.body.classList.remove('backstage-open');document.getElementById('fileTab')?.classList.remove('is-open');openSettings();requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')))};$('postageOpen').onclick=openPostage;$('printMain').onclick=()=>printSurface(s.view);$('printEnvelope').onclick=()=>printSurface(s.view);$('printInsert').onclick=()=>printSurface('insert');$('testPrint').onclick=()=>printSurface(s.view,true);$('exportPdf').onclick=()=>exportPDF(s.view);$('exportPair').onclick=()=>exportPDF(s.view,true);$('resetSelected').onclick=()=>resetPosition(selection);for(let k of ['posX','posY'])$(k).onchange=e=>{const n=Number(e.target.value);if(!Number.isFinite(n))return;const r=getRect(selection);setPosition(selection,k==='posX'?n:r.x,k==='posY'?n:r.y);save();render()};$('addText').onclick=()=>{const id='t'+Math.random().toString(36).slice(2,10);s.extra.push({id,text:'Custom message',fontSize:10,rect:{x:42,y:34,w:90,h:22}});selection='extra:'+id;save();render();openExtra(id)};$('batchOpen').onclick=openBatch;$('clearBatch').onclick=()=>{s.batchText='';s.batchEnabled=false;s.batchIndex=0;save();renderInputs();render();toast('Batch cleared')};$('drawerClose').onclick=closeDrawer;$('overlay').addEventListener('mousedown',e=>{if(e.target===$('overlay'))closeDrawer()});window.addEventListener('resize',renderCanvas);$('quickOpenDesign').onclick=openDesign;$('quickAddText').onclick=()=>{addDesign('text');openDesign()};$('quickAddShape').onclick=()=>{addDesign('rect');openDesign()};$('quickAddImage').onclick=()=>{openDesign();$('uploadLogo').click()};$('surfaceBg').onchange=e=>{s.surfaceBg[s.view]=safeHex(e.target.value);save();renderCanvas()};document.querySelectorAll('[name="foldMode"]').forEach(el=>el.onchange=e=>{s.foldGuides=e.target.value;save();renderCanvas();toast('Fold guides: '+(s.foldGuides==='none'?'hidden':s.foldGuides+' side'))});$('foldSettings').onclick=openSettings;$('letterTemplate').onclick=addLetterTemplate;if($('quickAddLine'))$('quickAddLine').onclick=()=>{addDesign('line');openDesign()};if($('qatSave'))$('qatSave').onclick=()=>{save();toast('Saved to this PC')};if($('selectTo'))$('selectTo').onclick=()=>{selection='recipient';document.body.classList.remove('pane-collapsed');$('recipientInput').focus();render()};if($('selectFrom'))$('selectFrom').onclick=()=>{selection='sender';document.body.classList.remove('pane-collapsed');$('senderInput').focus();render()};const applyZoom=v=>{viewZoom=Math.min(1.6,Math.max(.2,Math.round(v*100)/100));renderCanvas()};if($('zoomRange'))$('zoomRange').oninput=e=>applyZoom(Number(e.target.value)/100);if($('zoomIn'))$('zoomIn').onclick=()=>applyZoom((viewZoom||scale)+.1);if($('zoomOut'))$('zoomOut').onclick=()=>applyZoom((viewZoom||scale)-.1);const fitPage=()=>{viewZoom=null;renderCanvas()};if($('zoomFit'))$('zoomFit').onclick=fitPage;if($('zoomDisplay'))$('zoomDisplay').onclick=fitPage;$('stage').addEventListener('wheel',e=>{if(!(e.ctrlKey||e.metaKey))return;e.preventDefault();applyZoom((viewZoom||scale)+(e.deltaY<0?.1:-.1))},{passive:false});}
+function openDrawer(title,eyebrow,html){$('drawerTitle').textContent=title;$('drawerEyebrow').textContent=eyebrow;$('drawerBody').innerHTML=html;$('overlay').classList.add('open');$('overlay').setAttribute('aria-hidden','false');$('drawerClose').focus()}
+function closeDrawer(){$('overlay').classList.remove('open');$('overlay').setAttribute('aria-hidden','true')}
+function copyText(text){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard')).catch(()=>fallbackCopy(text))}else fallbackCopy(text)}
+function fallbackCopy(str){const t=document.createElement('textarea');t.value=str;document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();toast(ok?'Copied to clipboard':'Copy unavailable. Select text from the address editor.')}
+function openSettings(){const role=s.style==='double'?'Both recipient and sender windows':'Recipient window';const windowControls= s.style!=='plain'?`<div class="drawer-section"><h3>Window measurements</h3><p>Measure from the top-left corner of the envelope. Addresses remain permanently visible even if you change window styles.</p><div class="note-card">Current style: ${escapeHTML(role)}. All measurements are millimeters.</div>${['recipient',...(s.style==='double'?['sender']:[])].map(role=>`<h3 style="margin-top:15px">${role==='sender'?'Sender':'Recipient'} window</h3><div class="settings-grid">${[['x','Left'],['y','Top'],['w','Width'],['h','Height']].map(([p,label])=>`<label>${label}<input type="number" step=".25" data-win="${role}" data-key="${p}" value="${s.windows[role][p]}"></label>`).join('')}</div>`).join('')}<button class="button" id="resetWindows" style="margin-top:14px">Reset window measurements</button></div><div class="drawer-section"><h3>Folded insert</h3><p>Choose the printer sheet and where its folded address panel lands behind the window.</p><div class="settings-grid"><label>Paper size<select id="insertSheet"><option value="letter">US Letter</option><option value="a4">A4</option></select></label><label>Fold panel<select id="insertPanel"><option value="0">Top third</option><option value="1">Middle third</option><option value="2">Bottom third</option></select></label><label>Sheet left offset (mm)<input id="insertLeft" type="number" step=".5" value="${s.insert.left}"></label><label>Sheet top offset (mm)<input id="insertTop" type="number" step=".5" value="${s.insert.top}"></label></div></div>`:'';
+const profiles=getProfiles();openDrawer('Printer & layout','PRECISE PRINTING',`${windowControls}<div class="drawer-section"><h3>USPS Sorting Assist</h3><p>Normal First-Class letters are sorted by USPS machines using OCR, even without your own barcode. Sorting Assist prints the address in uppercase and checks the last line's ZIP format. It does not verify that the destination exists or qualify the letter for commercial automation discounts.</p><div class="note-card">No IMb is added automatically. A real IMb requires a USPS-issued MID, correct service code, barcode encoding, and print verification. Orange Mailer postage stays unchanged. Avoid adding postal barcodes or FIM patterns to ordinary stamped mail.</div><a href="https://gateway.usps.com" target="_blank" rel="noopener noreferrer" class="text-link">USPS Business Customer Gateway</a></div><div class="drawer-section"><h3>Printer alignment</h3><p>Start with zero offsets. Print an alignment test, measure how far the ink moved on the paper, then correct it here.</p><div class="settings-grid"><label>Horizontal correction (mm)<input type="number" step=".25" id="calX" value="${s.cal.x}"></label><label>Vertical correction (mm)<input type="number" step=".25" id="calY" value="${s.cal.y}"></label></div><div class="grid-two"><button class="button" id="settingsTest">Print 50 mm test</button><button class="button" id="settingsResetCal">Reset corrections</button></div><p class="note-card">If the printed content is 3 mm too far right, set horizontal correction to <strong>-3 mm</strong>. Print at 100% or Actual Size and disable headers, footers, and auto-scaling.</p><label class="input-label">Save calibration for a printer / tray</label><input id="calName" placeholder="Example: Brother · Manual feed"><button class="button full" id="saveProfile">Save this printer setup</button><label class="input-label">Load a printer setup</label><select id="profiles"><option value="">Choose saved profile...</option>${Object.keys(profiles).map(n=>`<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('')}</select></div><div class="drawer-section"><h3>Backup and restore</h3><button class="button" id="backup">Save project backup (.json)</button> <label class="button" for="restoreFile" style="cursor:pointer">Restore backup</label><input id="restoreFile" class="sr-only" type="file" accept="application/json,.json"><p>All address data stays in this browser unless you export or copy it. A backup includes your saved local layout.</p></div>`);
+const body=$('drawerBody');body.querySelectorAll('[data-win]').forEach(el=>el.onchange=e=>{const role=e.target.dataset.win,k=e.target.dataset.key;s.windows[role][k]=Math.max(k==='w'||k==='h'?10:0,cleanNumber(e.target.value,s.windows[role][k]));save();render()});if($('resetWindows'))$('resetWindows').onclick=()=>{s.windows=clone(INITIAL.windows);s.windowShift=clone(INITIAL.windowShift);save();openSettings();render()};if($('insertSheet')){$('insertSheet').value=s.insert.sheet;$('insertPanel').value=String(s.insert.panel);$('insertSheet').onchange=e=>{s.insert.sheet=e.target.value;save();render()};$('insertPanel').onchange=e=>{s.insert.panel=+e.target.value;save();render()};for(const [id,key] of [['insertLeft','left'],['insertTop','top']])$(id).onchange=e=>{s.insert[key]=cleanNumber(e.target.value,s.insert[key]);save();render()}}
+for(const [id,key] of [['calX','x'],['calY','y']])$(id).oninput=e=>{s.cal[key]=cleanNumber(e.target.value,0);save()};$('settingsTest').onclick=()=>printSurface(s.view,true);$('settingsResetCal').onclick=()=>{s.cal={x:0,y:0};$('calX').value=0;$('calY').value=0;save();toast('Corrections reset')};$('saveProfile').onclick=()=>{const name=$('calName').value.trim();if(!name)return toast('Give this printer setup a name');const all=getProfiles();all[name]={...s.cal};localStorage.setItem('envelope-studio-v3-printers',JSON.stringify(all));toast('Printer setup saved');openSettings()};$('profiles').onchange=e=>{const o=getProfiles()[e.target.value];if(!o)return;s.cal={...o};$('calX').value=s.cal.x;$('calY').value=s.cal.y;save();toast('Printer setup loaded')};$('backup').onclick=()=>downloadBlob('envelope-project.json',new Blob([JSON.stringify(s,null,2)],{type:'application/json'}));$('restoreFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(!obj.recipient||!obj.sender||!obj.rect||!obj.windows)throw Error('Missing project fields');s={...clone(INITIAL),...obj};save();closeDrawer();renderInputs();render();toast('Project restored')}catch(err){toast('Could not read that project backup')}}}
+function getProfiles(){try{return JSON.parse(localStorage.getItem('envelope-studio-v3-printers')||'{}')}catch{return {}}}
+function openExtra(id){const ex=s.extra.find(t=>t.id===id);if(!ex)return;openDrawer('Custom text','ADDITIONAL CONTENT',`<div class="drawer-section"><h3>Edit your custom text</h3><textarea id="extraContent" rows="4" spellcheck="false">${escapeHTML(ex.text)}</textarea><label class="input-label">Font size (pt)</label><input id="extraFont" type="number" min="6" max="28" step=".5" value="${ex.fontSize||10}"><label class="inline-format"><input type="checkbox" id="extraBold" ${ex.bold?'checked':''}> <strong>B</strong> Bold custom message</label><button class="button danger" id="removeExtra">Remove custom text</button></div><p>Your recipient and return address are permanent. Only custom text can be removed.</p>`);$('extraContent').oninput=e=>{ex.text=e.target.value;save();render()};$('extraFont').onchange=e=>{ex.fontSize=cleanNumber(e.target.value,10);save();render()};$('extraBold').onchange=e=>{ex.bold=e.target.checked;save();render()};$('removeExtra').onclick=()=>{removeCustom(id);closeDrawer()}}
+function openBatch(){openDrawer('Import addresses','BULK PRINTING',`<div class="drawer-section"><h3>CSV mailing list</h3><p>Use columns <strong>name, address1, address2, city, state, zip</strong>. Your addresses stay on this device.</p><div class="grid-two"><label class="button" for="csvFile" style="cursor:pointer">Choose CSV</label><button class="button" id="csvTemplate">Download example</button></div><input id="csvFile" type="file" accept=".csv,text/csv" class="sr-only"><label class="input-label">Or paste CSV text</label><textarea id="batchContent" rows="7" spellcheck="false">${escapeHTML(s.batchText)}</textarea><div id="csvCount" class="note-card"></div><label class="option-card"><input type="checkbox" id="enableBatch" ${s.batchEnabled?'checked':''}><span><strong>Use this CSV for print/export</strong><small>Each recipient gets a separate page. A single paid stamp image cannot be reused in a batch.</small></span></label><button class="button primary full" id="batchDone">Apply mailing list</button></div>`);
+const body=$('drawerBody'),count=()=>{const rows=parseCSV($('batchContent').value);$('csvCount').textContent=rows.length?`${rows.length} recipient${rows.length!==1?'s':''} detected. First: ${addressFromRow(rows[0]).replace(/\n/g,', ')}`:'No valid recipients yet.'};count();$('batchContent').oninput=count;$('csvFile').onchange=async e=>{const f=e.target.files[0];if(f){$('batchContent').value=await f.text();count()}};$('csvTemplate').onclick=()=>downloadBlob('envelope-recipients.csv',new Blob(['name,address1,address2,city,state,zip\r\nJane Smith,123 Main St,,Brooklyn,NY,11201\r\n'],{type:'text/csv'}));$('batchDone').onclick=()=>{s.batchText=$('batchContent').value;s.batchEnabled=$('enableBatch').checked&&parseCSV(s.batchText).length>0;s.batchIndex=0;save();renderInputs();render();closeDrawer();toast(s.batchEnabled?`${parseCSV(s.batchText).length} envelopes loaded`:'Mailing list saved')};}
+function openPostage(){openDrawer('Orange Mailer postage','BUY & PRINT',`<div class="drawer-section"><div class="note-card orange-note"><strong>Orange Mailer · Free pay-as-you-go available</strong><div>No subscription required on its Convenience plan. Postage is charged by Orange Mailer, not Envelope Studio.</div></div><h3>Choose your postage format</h3><label class="option-card"><input type="radio" name="orangeChoice" value="stamp" checked><span><strong>Stamp only, without addresses</strong><small>Best for your custom envelope. Choose Orange Mailer's <b>Print Stamps</b> and its single envelope stamp option.</small></span></label><label class="option-card"><input type="radio" name="orangeChoice" value="label"><span><strong>7 × 3-inch addressed label</strong><small>Orange Mailer includes sender, recipient, and postage. Print its supplied layout directly onto a compatible #10 envelope or a label.</small></span></label><div id="orangeFlow" class="note-card">In Orange Mailer, select <strong>Print Stamps</strong>, choose a single envelope-style <strong>TEST</strong> stamp, check alignment, then generate paid postage.</div><div class="grid-two"><button class="button" id="copyTo">Copy recipient</button><button class="button" id="copyFrom">Copy sender</button></div><button class="button primary full" id="openOrange">Open Orange Mailer ↗</button><p style="font-size:11px">Orange Mailer opens in a new tab. For new stamps, select <strong>TEST</strong> first, then switch to paid stamps only when alignment is correct.</p></div><div class="drawer-section"><h3>Bring purchased postage back</h3><p>Import a <strong>PDF, PNG or JPG</strong> from Orange Mailer. For PDFs, choose the page and drag a box around one stamp. Envelope Studio keeps the stamp artwork at high resolution.</p><label class="button full" for="stampFile" style="cursor:pointer">Import PNG / JPG stamp</label><input id="stampFile" type="file" accept="image/png,image/jpeg" class="sr-only"><div class="settings-grid" style="margin-top:12px"><label>Actual stamp width (mm)<input type="number" id="stampW" min="10" max="100" step=".1" value="${s.stampW}"></label><label>Actual stamp height (mm)<input type="number" id="stampH" min="10" max="80" step=".1" value="${s.stampH}"></label></div><div class="field-under"><span id="importedStampName">${escapeHTML(s.stampName||'No postage image added')}</span><button class="text-link danger" id="removeStamp">Remove image</button></div><div class="soft-divider"></div><h3>Import Orange Mailer PDF</h3><p>Choose your PDF, then select <strong>one complete stamp</strong> including its barcode and all borders. Never cut into the indicium. The PDF renderer loads on demand and needs an internet connection.</p><label class="button primary full" for="originalPDF" style="cursor:pointer">Import stamp from PDF</label><input id="originalPDF" class="sr-only" type="file" accept="application/pdf,.pdf"><div id="pdfStampTools" class="pdf-import-panel hide"><div id="pdfImportStatus" class="pdf-import-status" role="status">Loading PDF…</div><div class="pdf-import-toolbar"><label>PDF page <select id="pdfStampPage"></select></label><button class="button tiny" id="pdfResetCrop">Full page</button><button class="button tiny" id="pdfAutoTrim">Trim white space</button></div><div id="pdfPreviewOuter" class="pdf-preview-outer"><canvas id="pdfStampCanvas"></canvas><div id="pdfCrop" class="pdf-crop"></div></div><div class="crop-fields"><label>X mm<input type="number" id="cropX" step=".1" min="0"></label><label>Y mm<input type="number" id="cropY" step=".1" min="0"></label><label>Width mm<input type="number" id="cropW" step=".1" min="1"></label><label>Height mm<input type="number" id="cropH" step=".1" min="1"></label></div><div class="settings-grid" style="margin-top:12px"><label>Export resolution<select id="pdfResolution"><option value="300">300 DPI</option><option value="450">450 DPI</option><option value="600">600 DPI (barcode sharpness)</option></select></label><label>Trim padding<select id="trimPad"><option value="1">1 mm</option><option value="1.5" selected>1.5 mm</option><option value="2">2 mm</option><option value="3">3 mm</option></select></label></div><div class="pdf-help">Drag across the preview to select the stamp exactly. Avoid cutting into text, borders or barcodes. Select one stamp, not an entire sheet or a mailing label with addresses.</div><button class="button primary full" id="pdfUseCrop">Place selected stamp on envelope</button><button class="button full" id="openOriginal" ${originalPdf?'':'disabled'}>Open original PDF</button></div><div class="note-card">Import only an individually valid, unused Orange Mailer stamp. Paid indicia are unique and cannot be reused. Check the printed stamp with Orange Mailer before mailing.</div></div>`);
+document.querySelectorAll('input[name=orangeChoice]').forEach(el=>el.onchange=e=>{$('orangeFlow').innerHTML=e.target.value==='label'?'In Orange Mailer, choose a First-Class <strong>7 × 3-inch label</strong>. It includes both addresses. Print that provider-generated label as supplied, instead of printing the addresses a second time from this app.':'In Orange Mailer, select <strong>Print Stamps</strong>, choose a single envelope-style <strong>TEST</strong> stamp, check alignment, then generate paid postage.'});$('copyTo').onclick=()=>copyText(actualRecipient());$('copyFrom').onclick=()=>copyText(s.sender);$('openOrange').onclick=()=>{window.open('https://www.orangemailer.co/','_blank','noopener,noreferrer');toast('Orange Mailer opened in a new tab')};$('stampW').onchange=e=>{const w=Math.max(10,Math.min(100,cleanNumber(e.target.value,35))),ratio=s.stampH/s.stampW;s.stampW=w;s.stampH=+(w*ratio).toFixed(2);save();render();$('stampH').value=s.stampH};$('stampH').onchange=e=>{const h=Math.max(10,Math.min(80,cleanNumber(e.target.value,25))),ratio=s.stampW/s.stampH;s.stampH=h;s.stampW=+(h*ratio).toFixed(2);save();render();$('stampW').value=s.stampW};$('removeStamp').onclick=removeStamp;$('stampFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(!/^image\/(png|jpeg)$/.test(file.type))return toast('Use PNG or JPG stamp artwork');if(file.size>3e6)return toast('Use an image smaller than 3 MB');try{const data=await fileToData(file),img=await imageFromData(data),canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0);s.stampData=data;s.stampJpg=file.type==='image/jpeg'?data:'';s.stampName=file.name;selection='stamp';save();render();$('importedStampName').textContent=file.name;toast('Purchased image placed. Verify actual stamp size.')}catch(err){toast('Could not read stamp image')}};$('originalPDF').onchange=e=>{const file=e.target.files[0];if(!file)return;if(originalPdf?.url)URL.revokeObjectURL(originalPdf.url);originalPdf={url:URL.createObjectURL(file),name:file.name};$('pdfStampTools').classList.remove('hide');$('openOriginal').disabled=false;requestAnimationFrame(()=>$('pdfStampTools').scrollIntoView({block:'start',behavior:'smooth'}));loadPDFStamp(file)};$('openOriginal').onclick=()=>{if(originalPdf)window.open(originalPdf.url,'_blank','noopener')};}
+
+// PDF.js is loaded only when a user imports a PDF; no uploaded documents are sent to our servers.
+let pdfLibLoading=null,pdfStampDoc=null,pdfStampPage=null,pdfCropRect=null,pdfPreviewViewport=null,pdfPreviewDragging=false;
+async function loadPdfJs(){
+ if(window.pdfjsLib)return window.pdfjsLib;
+ if(pdfLibLoading)return pdfLibLoading;
+ const sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js'];
+ pdfLibLoading=(async()=>{for(const src of sources){try{await new Promise((res,rej)=>{const el=document.createElement('script');el.src=src;el.onload=res;el.onerror=()=>{el.remove();rej(Error('Unavailable PDF renderer'))};document.head.appendChild(el)});if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc=src.replace('pdf.min.js','pdf.worker.min.js');return window.pdfjsLib}}catch(e){}}throw Error('Could not load PDF support. Connect to the internet and retry.');})();
+ try{return await pdfLibLoading}catch(e){pdfLibLoading=null;throw e}
+}
+async function loadPDFStamp(file){
+ const status=$('pdfImportStatus');status.textContent='Loading PDF renderer…';
+ try{
+  if(file.size>25e6)throw Error('PDF is larger than 25 MB');
+  const lib=await loadPdfJs(),bytes=new Uint8Array(await file.arrayBuffer());
+  pdfStampDoc=await lib.getDocument({data:bytes}).promise;
+  const select=$('pdfStampPage');select.innerHTML=Array.from({length:pdfStampDoc.numPages},(_,i)=>`<option value="${i+1}">Page ${i+1} of ${pdfStampDoc.numPages}</option>`).join('');
+  select.onchange=()=>showPDFPage(+select.value);
+  $('pdfResetCrop').onclick=()=>{pdfCropRect={x:0,y:0,w:1,h:1};showPdfCrop()};$('pdfAutoTrim').onclick=autoTrimPdfCrop;$('pdfResolution').value=String(s.pdfDpi);$('pdfResolution').onchange=e=>{s.pdfDpi=+e.target.value;save()};for(const key of ['X','Y','W','H'])$('crop'+key).onchange=updateCropFromFields;
+  $('pdfUseCrop').onclick=applyPDFStamp;
+  const outer=$('pdfPreviewOuter');
+  outer.onpointerdown=e=>{if(!pdfStampPage)return;const r=outer.getBoundingClientRect();const x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));pdfPreviewDragging={x,y};pdfCropRect={x,y,w:0,h:0};outer.setPointerCapture(e.pointerId);showPdfCrop()};
+  outer.onpointermove=e=>{if(!pdfPreviewDragging)return;const r=outer.getBoundingClientRect();const x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));const p=pdfPreviewDragging;pdfCropRect={x:Math.min(x,p.x),y:Math.min(y,p.y),w:Math.abs(x-p.x),h:Math.abs(y-p.y)};showPdfCrop()};
+  outer.onpointerup=()=>{pdfPreviewDragging=false};outer.onpointercancel=()=>{pdfPreviewDragging=false};
+  await showPDFPage(1);
+ }catch(err){status.textContent='PDF import failed: '+err.message;toast('PDF import failed. See postage panel.')}
+}
+async function showPDFPage(index){
+ if(!pdfStampDoc)return;
+ const status=$('pdfImportStatus');status.textContent='Rendering page '+index+'…';
+ try{
+  const page=await pdfStampDoc.getPage(index),viewport=page.getViewport({scale:1}),scale=Math.min(2,680/viewport.width),view=page.getViewport({scale});
+  const canvas=$('pdfStampCanvas');canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);
+  await page.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:view}).promise;
+  pdfStampPage=page;pdfPreviewViewport=viewport;pdfCropRect={x:0,y:0,w:1,h:1};showPdfCrop();
+  status.textContent=`Page ${index} ready · ${Math.round(viewport.width/72*25.4)} × ${Math.round(viewport.height/72*25.4)} mm. Drag to select ONE stamp.`;
+ }catch(err){status.textContent='Cannot display page: '+err.message}
+}
+function showPdfCrop(){const c=$('pdfCrop');if(!pdfCropRect)return;c.style.display='block';c.style.left=(pdfCropRect.x*100)+'%';c.style.top=(pdfCropRect.y*100)+'%';c.style.width=(pdfCropRect.w*100)+'%';c.style.height=(pdfCropRect.h*100)+'%';if(pdfPreviewViewport){const k=25.4/72;$('cropX').value=(pdfCropRect.x*pdfPreviewViewport.width*k).toFixed(1);$('cropY').value=(pdfCropRect.y*pdfPreviewViewport.height*k).toFixed(1);$('cropW').value=(pdfCropRect.w*pdfPreviewViewport.width*k).toFixed(1);$('cropH').value=(pdfCropRect.h*pdfPreviewViewport.height*k).toFixed(1)}}
+function updateCropFromFields(){if(!pdfPreviewViewport)return;const w=pdfPreviewViewport.width*25.4/72,h=pdfPreviewViewport.height*25.4/72;const x=Math.max(0,Math.min(w-1,+$('cropX').value||0)),y=Math.max(0,Math.min(h-1,+$('cropY').value||0)),cw=Math.max(1,Math.min(w-x,+$('cropW').value||1)),ch=Math.max(1,Math.min(h-y,+$('cropH').value||1));pdfCropRect={x:x/w,y:y/h,w:cw/w,h:ch/h};showPdfCrop()}
+function autoTrimPdfCrop(){const canvas=$('pdfStampCanvas');if(!pdfCropRect||!canvas.width)return;const context=canvas.getContext('2d',{willReadFrequently:true}),data=context.getImageData(0,0,canvas.width,canvas.height).data;const cr=pdfCropRect,ax=Math.floor(cr.x*canvas.width),ay=Math.floor(cr.y*canvas.height),bx=Math.ceil((cr.x+cr.w)*canvas.width),by=Math.ceil((cr.y+cr.h)*canvas.height);let minX=bx,minY=by,maxX=-1,maxY=-1;const stride=2;for(let y=ay;y<by;y+=stride){for(let x=ax;x<bx;x+=stride){const i=(y*canvas.width+x)*4;if(data[i]<205||data[i+1]<205||data[i+2]<205){minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y)}}}if(maxX<0)return toast('No dark artwork found within the selected area');const pad=+($('trimPad').value||1.5)*canvas.width/(pdfPreviewViewport.width*25.4/72);minX=Math.max(ax,minX-pad);minY=Math.max(ay,minY-pad);maxX=Math.min(bx,maxX+pad);maxY=Math.min(by,maxY+pad);pdfCropRect={x:minX/canvas.width,y:minY/canvas.height,w:(maxX-minX)/canvas.width,h:(maxY-minY)/canvas.height};showPdfCrop();toast('Crop fitted to visible artwork with safety padding. Review all edges.')}
+
+async function applyPDFStamp(){
+ const status=$('pdfImportStatus'),r=pdfCropRect,p=pdfPreviewViewport;
+ if(!pdfStampPage||!r||r.w<.01||r.h<.01)return toast('Drag a rectangle around ONE complete stamp.');
+ const wMM=p.width/72*25.4*r.w,hMM=p.height/72*25.4*r.h;
+ if(wMM>102||hMM>80||wMM<8||hMM<6)return toast('Crop a single stamp, not an entire PDF page or label.');
+ status.textContent=`Extracting stamp at ${s.pdfDpi} DPI…`;
+ try{
+   // Render only the selected PDF region at its true physical scale. This avoids
+   // allocating an enormous full-page 600-DPI canvas for multi-stamp sheets.
+   const dpi=s.pdfDpi||600,full=pdfStampPage.getViewport({scale:dpi/72});
+   const cx=Math.round(full.width*r.x),cy=Math.round(full.height*r.y),cw=Math.round(full.width*r.w),ch=Math.round(full.height*r.h);
+   if(cw*ch>12000000)throw Error('Selected stamp is too large at this DPI. Crop tighter or choose 300 DPI.');
+   const cut=document.createElement('canvas');cut.width=Math.max(1,cw);cut.height=Math.max(1,ch);
+   const ctx=cut.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);
+   await pdfStampPage.render({canvasContext:ctx,viewport:full,transform:[1,0,0,1,-cx,-cy]}).promise;
+  s.stampData=cut.toDataURL('image/png');s.stampJpg='';s.stampName=originalPdf.name+' · page '+$('pdfStampPage').value;
+  s.stampW=+wMM.toFixed(2);s.stampH=+hMM.toFixed(2);
+  s.rect.stamp={...s.rect.stamp,x:Math.max(4,s.w-s.stampW-9),y:Math.max(4,8)};
+  selection='stamp';save();render();
+  $('stampW').value=s.stampW;$('stampH').value=s.stampH;$('importedStampName').textContent=s.stampName;
+  status.textContent=`Stamp placed · ${s.stampW} × ${s.stampH} mm, ${s.pdfDpi} DPI. Check preview and print a test.`;
+  toast('PDF stamp placed onto envelope. Check exact size before mailing.');
+ }catch(err){status.textContent='Stamp extraction failed: '+err.message;toast('Could not extract stamp PDF')}
+}
+function fileToData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
+function imageFromData(src){return new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src})}
+function downloadBlob(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+function blockNode(role,text,surface,print=true){const r=getRect(role,surface),el=document.createElement('div');el.className=print?'print-piece':'address-block';if(role==='recipient'||role==='sender')el.innerHTML=addressMarkup(role,text);else el.textContent=text;el.style.cssText=`${cssPos(r)}font-family:${s.font};font-size:${fontFor(role)}pt;font-weight:${isBold(role)?700:400};`;return el}
+function printSurface(surface=s.view,test=false){if(isLetterSurface(surface)&&s.style==='plain')return toast('Choose a window envelope first');const recipients=test?['']:addresses();if(s.stampData&&!test&&recipients.length>1&&surface==='envelope')return toast('One purchased stamp cannot be reused for multiple envelopes.');if(!test&&recipients.some(a=>!a.trim()))return toast('Enter a recipient address');const o=size(surface);$('print-page-rule').textContent=`@page{size:${o.w}mm ${o.h}mm;margin:0}`;const host=$('printHost');host.innerHTML='';for(const recipient of recipients){const sheet=document.createElement('div');sheet.className='print-sheet';sheet.style.setProperty('--pw',o.w+'mm');sheet.style.setProperty('--ph',o.h+'mm');sheet.style.background=activeBg(surface);const layer=document.createElement('div');layer.style.cssText=`position:absolute;inset:0;transform:translate(${s.cal.x}mm,${s.cal.y}mm);`;sheet.appendChild(layer);if(test)addRuler(layer,o);else{renderPrintDesign(layer,surface);for(const role of ['sender','recipient'])if(printRole(role,surface))layer.appendChild(blockNode(role,actualText(role,recipient),surface));if(surface==='envelope'){for(const ex of s.extra)layer.appendChild(blockNode('extra:'+ex.id,ex.text,'envelope'));if(s.stampData){const img=document.createElement('img');img.className='print-stamp';img.src=s.stampData;img.style.cssText=cssPos(getRect('stamp','envelope'));layer.appendChild(img)}}const folds=foldPrintHTML(surface);if(folds)layer.appendChild(folds)}host.appendChild(sheet)}toast('Use Actual Size / 100%.'+(surface==='back'||surface==='insertBack'?' Verify reverse-side feed direction.':''));window.print()}
+
+function addRuler(layer,o){const marks=[[10,10,50,.3],[10,10,.3,50],[o.w-18,9,9,.3],[o.w-9,9,.3,9],[9,o.h-18,.3,9],[9,o.h-9,9,.3]];for(let i=0;i<=50;i+=5){marks.push([10+i,8.5,.20,i%10===0?3:1.8]);marks.push([8.5,10+i,i%10===0?3:1.8,.20])}for(const [x,y,w,h]of marks){const el=document.createElement('div');el.className='test-mark';el.style.cssText=`left:${x}mm;top:${y}mm;width:${w}mm;height:${h}mm`;layer.appendChild(el)}const label=document.createElement('div');label.style.cssText=`position:absolute;top:62mm;left:14mm;font-size:8pt;font-family:Arial`;if(o.h<78)label.style.top=(o.h-10)+'mm';label.textContent='50 mm reference · test only · print at 100%';layer.appendChild(label)}
+const pdfChars={'€':128,'‚':130,'ƒ':131,'„':132,'…':133,'†':134,'‡':135,'ˆ':136,'‰':137,'Š':138,'‹':139,'Œ':140,'Ž':142,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151,'˜':152,'™':153,'š':154,'›':155,'œ':156,'ž':158,'Ÿ':159};
+function pdfByteString(str){let s2='';for(const c of String(str)){const n=c.codePointAt(0);s2+=String.fromCharCode(pdfChars[c]??(n<=255?n:63))}return s2}
+function pdfEscape(str){return pdfByteString(str).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]/g,' ')}
+function pdfBytes(str){const out=new Uint8Array(str.length);for(let i=0;i<str.length;i++)out[i]=str.charCodeAt(i)&255;return out}
+function base64Bytes(base64){const str=atob(base64);return pdfBytes(str)}
+function arrayConcat(parts){const len=parts.reduce((sum,a)=>sum+a.length,0),out=new Uint8Array(len);let n=0;for(const a of parts){out.set(a,n);n+=a.length}return out}
+function streamObject(dict,content){return arrayConcat([pdfBytes(`<< /Length ${content.length}${dict?' '+dict:''} >>\nstream\n`),content,pdfBytes('\nendstream')])}
+function wrapTextLines(text,style,widthMM){const c=document.createElement('canvas'),ctx=c.getContext('2d');ctx.font=`${style.italic?'italic ':''}${style.bold?'bold ':''}${style.size}pt ${style.font||'Arial'}`;const widthPX=Math.max(16,widthMM*96/25.4),measure=t=>ctx.measureText(t).width;const result=[];for(const paragraph of String(text||'').split('\n')){if(!paragraph.trim()){result.push('');continue}let line='';for(const word of paragraph.split(/\s+/)){const candidate=line?line+' '+word:word;if(measure(candidate)>widthPX&&line){result.push(line);line=word}else line=candidate}result.push(line)}return result}
+function pdfCommands(surface,recipient,assets={}){const o=size(surface),ph=o.h*UNIT,num=n=>Number(n).toFixed(3),px=n=>num(n*UNIT),py=n=>num(ph-n*UNIT),commands=['q',`1 0 0 1 ${(s.cal.x*UNIT).toFixed(3)} ${(-s.cal.y*UNIT).toFixed(3)} cm`];const baseFont=f=>f==='Georgia'||f==='Times New Roman'?'times':f==='Courier New'?'courier':'helvetica';function fid(bold,italic,f=s.font){const base=baseFont(f),idx=base==='times'?1:base==='courier'?2:0;return 'F'+(1+idx+(bold?3:0)+(italic?6:0))}function writeLine(line,x,y,st){if(!line)return;const [r,g,b]=rgb(st.color||'#27384d');commands.push(`BT /${fid(st.bold,st.italic,st.font)} ${num(st.size)} Tf ${num(st.spacing||0)} Tc ${num(r)} ${num(g)} ${num(b)} rg 1 0 0 1 ${px(x)} ${py(y)} Tm (${pdfEscape(line)}) Tj ET`)}function drawText(role,t){const r=getRect(role,surface);let y=r.y;if(role==='sender'||role==='recipient'){String(t).split('\n').forEach((line,i)=>{const st=styleFor(role,i),lm=st.size*25.4/72,adv=lm*st.lineHeight,approx=line.length*(lm*(s.font==='Courier New'?.60:.52)+st.spacing*25.4/72),x=st.align==='right'?r.x+r.w-approx:st.align==='center'?r.x+(r.w-approx)/2:r.x;writeLine(line,Math.max(0,x),y+lm*.97,{...st,font:s.font});y+=adv})}else{const pt=fontFor(role),st={size:pt,bold:isBold(role),italic:false,color:'#26364b',spacing:0,font:s.font};for(const line of t.split('\n')){writeLine(line,r.x,y+pt*25.4/72*.97,st);y+=pt*25.4/72*1.35}}}
+// Per-surface full bleed color. A regular printer may leave unprinted margins.
+const [br,bg,bb]=rgb(activeBg(surface));commands.push(`${num(br)} ${num(bg)} ${num(bb)} rg 0 0 ${px(o.w)} ${px(o.h)} re f`);
+for(const d of designCollection(surface)){const r=d.rect;if(['logo','image'].includes(d.type)){const id=assets[d.id];if(id)commands.push(`q ${px(r.w)} 0 0 ${px(r.h)} ${px(r.x)} ${py(r.y+r.h)} cm /${id} Do Q`)}else if(d.type==='line'||d.type==='rect'){const [red,green,blue]=rgb(d.color);commands.push(`${num(red)} ${num(green)} ${num(blue)} RG ${num(red)} ${num(green)} ${num(blue)} rg ${num(Math.max(.3,(d.stroke||.8)*UNIT))} w`);if(d.type==='line')commands.push(`${px(r.x)} ${py(r.y)} m ${px(r.x+r.w)} ${py(r.y+r.h)} l S`);else commands.push(`${px(r.x)} ${py(r.y+r.h)} ${px(r.w)} ${px(r.h)} re ${d.filled?'f':'S'}`)}else if(d.type==='text'){let y=r.y;const st={size:d.fontSize||12,bold:!!d.bold,italic:!!d.italic,color:safeHex(d.color),spacing:0,font:d.font||s.font};for(const line of wrapTextLines(d.text||'',st,r.w)){if(y>r.y+r.h-1||y>o.h-4)break;writeLine(line,r.x,y+st.size*25.4/72*.95,st);y+=st.size*25.4/72*1.22}}}
+for(const role of ['sender','recipient'])if(printRole(role,surface))drawText(role,actualText(role,recipient));
+if(surface==='envelope'){for(const e of s.extra)drawText('extra:'+e.id,e.text||'');if(assets.stamp){const r=getRect('stamp','envelope');commands.push(`q ${px(r.w)} 0 0 ${px(r.h)} ${px(r.x)} ${py(r.y+r.h)} cm /${assets.stamp} Do Q`)}}
+if(isLetterSurface(surface)&&s.foldGuides===(surface==='insert'?'front':'back')){commands.push('q 0.68 0.77 0.88 RG 0.42 w [2 3] 0 d');const [a,b]=foldPositions(surface);for(const y of [a,b])commands.push(`0 ${py(y)} m ${px(o.w)} ${py(y)} l S`);commands.push('Q');writeLine('1  ALIGN BOTTOM EDGE TO LINE',Math.max(5,o.w-75),a+3,{size:6,bold:false,italic:false,color:'#7089ab',font:'Arial'});writeLine('2  ALIGN TOP EDGE TO LINE',Math.max(5,o.w-75),b-2,{size:6,bold:false,italic:false,color:'#7089ab',font:'Arial'})}
+commands.push('Q');return commands.join('\n')}
+async function encodePdfImage(data){if(!data)return null;const image=await imageFromData(data),w=image.naturalWidth,h=image.naturalHeight;if(w*h>14000000)throw Error('Imported artwork exceeds 14 megapixels');if(data.startsWith('data:image/jpeg'))return {bytes:base64Bytes(data.split(',')[1]),w,h,filter:'DCTDecode'};if(typeof CompressionStream==='undefined')throw Error('PDF image compression unavailable in this browser. Use browser Print instead.');const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);ctx.drawImage(image,0,0);const rgba=ctx.getImageData(0,0,w,h).data,raw=new Uint8Array(w*h*3);for(let i=0,j=0;i<rgba.length;i+=4){raw[j++]=rgba[i];raw[j++]=rgba[i+1];raw[j++]=rgba[i+2]}return {bytes:new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer()),w,h,filter:'FlateDecode'}}
+async function exportPDF(surface=s.view,pair=false){if(isLetterSurface(surface)&&s.style==='plain')return toast('Choose a window envelope for letter printing');const recipients=addresses();if(recipients.some(x=>!x.trim()))return toast('Enter recipient address');const surfaces=pair?(isLetterSurface(surface)?['insert','insertBack']:['envelope','back']):[surface];if(s.stampData&&recipients.length>1&&surfaces.includes('envelope'))return toast('One purchased stamp cannot be duplicated across a mailing list');
+let inputs={};for(const sf of surfaces){for(const d of designCollection(sf)){const src=d.src||(d.type==='logo'&&sf==='envelope'?s.logoData:'');if(src)inputs[d.id]=src}if(sf==='envelope'&&s.stampData)inputs.stamp=s.stampData}
+let imgs={};try{for(const [id,src]of Object.entries(inputs))imgs[id]=await encodePdfImage(src)}catch(e){return toast('PDF image error: '+e.message)}
+const objs=[null],add=o=>(objs.push(o),objs.length-1),root=add(''),pagesRoot=add(''),fonts=['Helvetica','Times-Roman','Courier','Helvetica-Bold','Times-Bold','Courier-Bold','Helvetica-Oblique','Helvetica-BoldOblique','Times-Italic','Times-BoldItalic','Courier-Oblique','Courier-BoldOblique'].map(f=>add(`<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`));const fontRefs=`/Font << ${fonts.map((n,i)=>`/F${i+1} ${n} 0 R`).join(' ')} >>`;const imageRefs={},imageResources=[];for(const [id,im]of Object.entries(imgs)){const r=add(streamObject(`/Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /${im.filter}`,im.bytes)),tag='Img'+(Object.keys(imageRefs).length+1);imageRefs[id]=tag;imageResources.push(`/${tag} ${r} 0 R`)}const resources=`<< ${fontRefs}${imageResources.length?` /XObject << ${imageResources.join(' ')} >>`:''} >>`,pageIds=[];for(const recipient of recipients)for(const sf of surfaces){const content=add(streamObject('',pdfBytes(pdfCommands(sf,recipient,imageRefs)))),o=size(sf),p=add(`<< /Type /Page /Parent ${pagesRoot} 0 R /MediaBox [0 0 ${(o.w*UNIT).toFixed(4)} ${(o.h*UNIT).toFixed(4)}] /Resources ${resources} /Contents ${content} 0 R >>`);pageIds.push(p)}objs[pagesRoot]=`<< /Type /Pages /Kids [${pageIds.map(id=>id+' 0 R').join(' ')}] /Count ${pageIds.length} >>`;objs[root]=`<< /Type /Catalog /Pages ${pagesRoot} 0 R >>`;const chunks=[],positions=[0];let total=0;function append(b){chunks.push(b);total+=b.length}append(pdfBytes('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'));for(let i=1;i<objs.length;i++){positions.push(total);append(pdfBytes(`${i} 0 obj\n`));append(typeof objs[i]==='string'?pdfBytes(objs[i]):objs[i]);append(pdfBytes('\nendobj\n'))}const xref=total;append(pdfBytes(`xref\n0 ${objs.length}\n0000000000 65535 f \n`));for(let i=1;i<objs.length;i++)append(pdfBytes(String(positions[i]).padStart(10,'0')+' 00000 n \n'));append(pdfBytes(`trailer\n<< /Size ${objs.length} /Root ${root} 0 R >>\nstartxref\n${xref}\n%%EOF`));downloadBlob(`envelope-studio-${pair?(isLetterSurface(surface)?'letter-duplex':'envelope-front-back'):surface}.pdf`,new Blob([arrayConcat(chunks)],{type:'application/pdf'}));toast(`Saved ${pageIds.length} vector PDF page(s). Print at 100%.`)}
+
+initListeners();renderInputs();renderCanvas();save();
+})();
+
+</script><script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const PREF = 'envelope-office-ui';
+  const loadPref = () => { try { return JSON.parse(localStorage.getItem(PREF) || '{}'); } catch { return {}; } };
+  const savePref = patch => { try { localStorage.setItem(PREF, JSON.stringify({ ...loadPref(), ...patch })); } catch { /* keep going */ } };
+  let tipStage = 0;
+
+  function clearTips() {
+    tipStage = 0;
+    document.body.classList.remove('show-keytips', 'show-cmdtips');
+  }
+  function refit() { requestAnimationFrame(() => window.dispatchEvent(new Event('resize'))); }
+  function syncToggles() {
+    const rulers = !document.body.classList.contains('rulers-off');
+    const pane = !document.body.classList.contains('pane-collapsed');
+    const ribbon = document.body.classList.contains('ribbon-collapsed');
+    $('toggleRulers').classList.toggle('is-on', rulers);
+    $('toggleRulers').setAttribute('aria-pressed', String(rulers));
+    $('togglePane').classList.toggle('is-on', pane);
+    $('togglePane').setAttribute('aria-pressed', String(pane));
+    const label = ribbon ? 'Expand the Ribbon' : 'Collapse the Ribbon';
+    $('ribbonCollapse').title = label;
+    $('ribbonCollapse').setAttribute('aria-label', label);
+  }
+  function showBs(name) {
+    document.querySelectorAll('[data-bs]').forEach(b => b.classList.toggle('active', b.dataset.bs === name));
+    document.querySelectorAll('[data-bs-page]').forEach(p => { p.hidden = p.dataset.bsPage !== name; });
+    if ($('bsSaved')) $('bsSaved').textContent = $('saveIndicator').textContent;
+    if ($('bsSize')) $('bsSize').textContent = $('dimensionsText').textContent;
+    if ($('bsReady')) $('bsReady').textContent = $('printReadiness').innerText.replace(/\s+/g, ' ').trim();
+  }
+  function closeBackstage() {
+    document.body.classList.remove('backstage-open');
+    $('fileTab').classList.remove('is-open');
+    $('fileTab').setAttribute('aria-selected', 'false');
+    refit();
+  }
+  function openBackstage(page) {
+    document.body.classList.add('backstage-open');
+    $('fileTab').classList.add('is-open');
+    $('fileTab').setAttribute('aria-selected', 'true');
+    showBs(page || 'info');
+    refit();
+  }
+  function showTab(name) {
+    document.querySelectorAll('[data-tab]').forEach(t => {
+      const on = t.dataset.tab === name;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-panel]').forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+    if (document.body.classList.contains('backstage-open')) closeBackstage();
+  }
+  function setPane(off) {
+    document.body.classList.toggle('pane-collapsed', off);
+    savePref({ paneOff: off });
+    syncToggles();
+    refit();
+  }
+
+  const pref = loadPref();
+  if (pref.ribbonCollapsed) document.body.classList.add('ribbon-collapsed');
+  if (pref.rulersOff) document.body.classList.add('rulers-off');
+  if (pref.paneOff) document.body.classList.add('pane-collapsed');
+  syncToggles();
+  if (pref.ribbonCollapsed || pref.rulersOff || pref.paneOff) refit();
+
+  document.querySelectorAll('[data-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      clearTips();
+      const collapsed = document.body.classList.contains('ribbon-collapsed');
+      if (tab.classList.contains('active') && !collapsed && !document.body.classList.contains('backstage-open')) {
+        document.body.classList.add('ribbon-collapsed');
+        savePref({ ribbonCollapsed: true });
+        syncToggles();
+        refit();
+        return;
+      }
+      document.body.classList.remove('ribbon-collapsed');
+      savePref({ ribbonCollapsed: false });
+      syncToggles();
+      showTab(tab.dataset.tab);
+      refit();
+    });
+  });
+  $('ribbonCollapse').addEventListener('click', () => {
+    document.body.classList.toggle('ribbon-collapsed');
+    savePref({ ribbonCollapsed: document.body.classList.contains('ribbon-collapsed') });
+    syncToggles();
+    refit();
+  });
+  $('fileTab').addEventListener('click', () => { clearTips(); openBackstage('info'); });
+  $('backstageClose').addEventListener('click', closeBackstage);
+  document.querySelectorAll('[data-bs]').forEach(b => b.addEventListener('click', () => {
+    if (!document.body.classList.contains('backstage-open')) openBackstage(b.dataset.bs);
+    else showBs(b.dataset.bs);
+  }));
+  document.querySelectorAll('[data-click]').forEach(b => b.addEventListener('click', () => {
+    const target = $(b.dataset.click);
+    if (target) target.click();
+  }));
+  document.querySelectorAll('[data-focus]').forEach(b => b.addEventListener('click', () => {
+    setPane(false);
+    const el = $(b.dataset.focus);
+    if (!el) return;
+    el.focus();
+    el.scrollIntoView({ block: 'center' });
+  }));
+  document.querySelectorAll('[data-style-pick]').forEach(b => b.addEventListener('click', () => {
+    const sel = $('styleSelect');
+    sel.value = b.dataset.stylePick;
+    sel.dispatchEvent(new Event('change'));
+  }));
+  $('togglePane').addEventListener('click', () => setPane(!document.body.classList.contains('pane-collapsed')));
+  $('paneClose').addEventListener('click', () => setPane(true));
+  $('toggleRulers').addEventListener('click', () => {
+    document.body.classList.toggle('rulers-off');
+    savePref({ rulersOff: document.body.classList.contains('rulers-off') });
+    syncToggles();
+    refit();
+  });
+
+  const commands = [
+    ['Print', 'Open Print. Ctrl+P', () => openBackstage('print')],
+    ['Quick Print', 'Print the current side', () => $('printEnvelope').click()],
+    ['Print Alignment', 'Print a test sheet', () => $('testPrint').click()],
+    ['Create PDF', 'Save this side as a PDF', () => $('exportPdf').click()],
+    ['Both Sides', 'Save the front and back', () => $('exportPair').click()],
+    ['Options', 'Printer, windows, and backup', () => $('settingsOpen').click()],
+    ['Postage', 'Buy and place postage', () => $('postageOpen').click()],
+    ['Design Pane', 'Artwork for this side', () => { showTab('design'); $('designOpen').click(); }],
+    ['Text Box', 'Insert a text box', () => $('quickAddText').click()],
+    ['Message', 'Insert custom text', () => $('addText').click()],
+    ['Letter', 'Insert a letter template', () => $('letterTemplate').click()],
+    ['Rectangle', 'Insert a rectangle', () => $('quickAddShape').click()],
+    ['Line', 'Insert a line', () => $('quickAddLine').click()],
+    ['Pictures', 'Insert a picture', () => $('quickAddImage').click()],
+    ['Select Recipients', 'Import a mailing list', () => { showTab('mailings'); $('batchOpen').click(); }],
+    ['Font', 'Change the font', () => { showTab('home'); $('fontSelect').focus(); }],
+    ['Size', 'Change the envelope size', () => { showTab('layout'); $('sizePreset').focus(); }],
+    ['Windows', 'Adjust window measurements', () => $('editWindows').click()],
+    ['Sorting Assist', 'Check the address format', () => { setPane(false); $('sortingAssist').focus(); }],
+    ['Ruler', 'Show or hide the ruler', () => $('toggleRulers').click()],
+    ['Fit Page', 'Fit the page in the window', () => $('zoomFit').click()],
+    ['Help', 'Shortcuts and print setup', () => { document.body.classList.remove('ribbon-collapsed'); showTab('help'); }]
+  ];
+  const results = $('tellmeResults');
+  const search = $('tellmeInput');
+  let hi = 0;
+  function paintSearch(query) {
+    const q = query.trim().toLowerCase();
+    const list = commands.filter(c => !q || c[0].toLowerCase().includes(q) || c[1].toLowerCase().includes(q)).slice(0, 8);
+    hi = 0;
+    if (!list.length) {
+      results.innerHTML = '<div class="empty">No commands found.</div>';
+      results.hidden = false;
+      return;
+    }
+    results.innerHTML = list.map((c, i) => `<button type="button" role="option" data-i="${i}" aria-selected="${i === 0 ? 'true' : 'false'}"><strong>${c[0]}</strong><span>${c[1]}</span></button>`).join('');
+    results.hidden = false;
+    results.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('mousedown', ev => ev.preventDefault());
+      btn.addEventListener('click', () => { results.hidden = true; search.value = ''; list[+btn.dataset.i][2](); });
+    });
+  }
+  function markSearch() {
+    const buttons = [...results.querySelectorAll('button')];
+    buttons.forEach((b, i) => b.setAttribute('aria-selected', i === hi ? 'true' : 'false'));
+    buttons[hi]?.scrollIntoView({ block: 'nearest' });
+  }
+  search.addEventListener('focus', () => paintSearch(search.value));
+  search.addEventListener('input', () => paintSearch(search.value));
+  search.addEventListener('blur', () => setTimeout(() => { results.hidden = true; }, 160));
+  search.addEventListener('keydown', e => {
+    const buttons = [...results.querySelectorAll('button')];
+    if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); hi = Math.min(buttons.length - 1, hi + 1); markSearch(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); hi = Math.max(0, hi - 1); markSearch(); }
+    else if (e.key === 'Enter' && buttons[hi]) { e.preventDefault(); e.stopPropagation(); buttons[hi].click(); }
+    else if (e.key === 'Escape') { results.hidden = true; search.blur(); }
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'F1') {
+      e.preventDefault();
+      document.body.classList.toggle('ribbon-collapsed');
+      savePref({ ribbonCollapsed: document.body.classList.contains('ribbon-collapsed') });
+      syncToggles();
+      refit();
+      return;
+    }
+    if (e.key === 'F1' && !e.altKey) {
+      e.preventDefault();
+      clearTips();
+      document.body.classList.remove('ribbon-collapsed');
+      showTab('help');
+      return;
+    }
+    const typing = document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]');
+    if (e.key === 'Escape' && !$('overlay').classList.contains('open')) {
+      if (tipStage) { clearTips(); return; }
+      if (!results.hidden) { results.hidden = true; return; }
+      if (document.body.classList.contains('backstage-open')) { closeBackstage(); return; }
+    }
+    if (e.key === 'Alt' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.shiftKey && !typing) {
+      e.preventDefault();
+      if (tipStage) { clearTips(); return; }
+      tipStage = 1;
+      document.body.classList.add('show-keytips');
+      document.body.classList.remove('show-cmdtips');
+      return;
+    }
+    if (!tipStage || typing || e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
+    if (!/^[a-z0-9]$/i.test(e.key)) return;
+    const k = e.key.toLowerCase();
+    e.preventDefault();
+    if (tipStage === 1) {
+      if (k === 'f') { clearTips(); openBackstage('info'); return; }
+      const tab = document.querySelector(`.ribbon-tab[data-key="${k}"]`);
+      if (!tab) { clearTips(); return; }
+      document.body.classList.remove('ribbon-collapsed');
+      savePref({ ribbonCollapsed: false });
+      showTab(tab.dataset.tab);
+      tipStage = 2;
+      document.body.classList.remove('show-keytips');
+      document.body.classList.add('show-cmdtips');
+      syncToggles();
+      return;
+    }
+    const el = document.querySelector(`.ribbon-panel.active [data-cmd="${k}"]`);
+    clearTips();
+    if (!el) return;
+    if (el.matches('input,select,textarea')) el.focus();
+    else el.click();
+  });
+})();
+</script>
+
+</body></html>
