@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { letterFold } from '~/lib/geometry'
 import { useStudio } from '~/composables/useStudio'
 import type { Role } from '~/lib/types'
 
@@ -12,6 +13,17 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(() => {
   try { profiles.value = JSON.parse(localStorage.getItem(KEY) || '{}') } catch { profiles.value = {} }
+})
+
+const fold = computed(() => letterFold(doc.value))
+const foldText = computed(() => {
+  const plan = fold.value
+  const side = Math.abs(plan.side).toFixed(2)
+  const seat = plan.seat.toFixed(2)
+  if (!plan.fitsWidth) return 'This sheet is wider than the envelope, so the side gaps cannot close.'
+  if (!plan.fitsHeight) return `The shortest fold is ${plan.face.toFixed(2)} mm, which is taller than this envelope.`
+  if (!plan.creases.length) return `The sheet fits without a fold. It sits ${seat} mm from the top and ${side} mm from each side.`
+  return `Folded height ${plan.face.toFixed(2)} mm. The sheet sits ${seat} mm from the top and ${side} mm from each side, and the addresses meet the windows.`
 })
 
 function roles(): Role[] {
@@ -75,16 +87,8 @@ async function restore(event: Event) {
                 <option value="a4">A4</option>
               </select>
             </label>
-            <label>Address panel
-              <select :value="doc.insert.panel" @change="studio.edit(() => { doc.insert.panel = Number(($event.target as HTMLSelectElement).value) as 0 | 1 | 2 })">
-                <option value="0">Top third</option>
-                <option value="1">Middle third</option>
-                <option value="2">Bottom third</option>
-              </select>
-            </label>
-            <label>Sheet left offset mm<input type="number" step="0.5" :value="doc.insert.left" @change="studio.edit(() => { doc.insert.left = Number(($event.target as HTMLInputElement).value) || 0 })"></label>
-            <label>Sheet top offset mm<input type="number" step="0.5" :value="doc.insert.top" @change="studio.edit(() => { doc.insert.top = Number(($event.target as HTMLInputElement).value) || 0 })"></label>
           </div>
+          <p>{{ foldText }}</p>
         </section>
         <section class="drawer-section">
           <h3>Printer alignment</h3>

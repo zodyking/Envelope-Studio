@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { MM } from '~/lib/constants'
 import { flapPath } from '~/lib/flaps'
-import { cssBox, hasWindow, isLetter, pageSize, showsAddress } from '~/lib/geometry'
+import { cssBox, hasWindow, isLetter, letterFold, pageSize, showsAddress } from '~/lib/geometry'
 import { htmlToPlain, isEmptyHtml, plainToHtml, postalHtml, postalPlain, textCss } from '~/lib/text'
 import { useStudio } from '~/composables/useStudio'
 import type { Box, Role, SurfaceId } from '~/lib/types'
@@ -34,13 +34,10 @@ const flap = computed(() => {
 })
 
 const folds = computed(() => {
-  if (!isLetter(surface.value)) return []
+  if (!isLetter(surface.value) || doc.value.style === 'plain') return []
   const expected = surface.value === 'letter' ? 'front' : 'back'
   if (doc.value.foldGuides !== expected) return []
-  return [
-    { y: page.value.h / 3, label: '1  Align the bottom edge here' },
-    { y: page.value.h * 2 / 3, label: '2  Align the top edge here' },
-  ]
+  return letterFold(doc.value).creases
 })
 
 function roleHtml(role: Role) {
