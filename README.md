@@ -4,7 +4,7 @@ Design envelopes and the letters that go inside them. A regular envelope prints 
 
 <p align="center">
   <a href="https://github.com/zodyking/Envelope-Studio/releases/latest/download/Envelope-Studio.exe">
-    <img src="download.svg" width="760" alt="Download Envelope Studio for Windows">
+    <img src="download.png" width="760" alt="Download for Windows">
   </a>
 </p>
 
