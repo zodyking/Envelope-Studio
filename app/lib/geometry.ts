@@ -31,7 +31,15 @@ export function hasWindow(doc: MailDoc, role: Role) {
   return doc.style === 'double' || (doc.style === 'single' && role === 'recipient')
 }
 
+/** The address field on screen. A windowed address is the same field on the envelope and the letter. */
 export function showsAddress(doc: MailDoc, role: Role, surface: SurfaceId) {
+  if (surface === 'letter') return hasWindow(doc, role)
+  if (surface === 'envelope') return true
+  return false
+}
+
+/** Ink. A windowed address is printed on the letter, where it shows through the window. */
+export function printsAddress(doc: MailDoc, role: Role, surface: SurfaceId) {
   if (surface === 'letter') return hasWindow(doc, role)
   if (surface === 'envelope') return !hasWindow(doc, role)
   return false
@@ -60,23 +68,7 @@ export function addressFrame(doc: MailDoc, role: Role, surface: SurfaceId): Box 
   return inner
 }
 
-export function writeAddressFrame(doc: MailDoc, role: Role, surface: SurfaceId, next: Box) {
-  if (!hasWindow(doc, role)) {
-    doc[role].frame = { ...next }
-    return
-  }
-  if (surface !== 'letter') {
-    doc.windows[role] = { ...next }
-    return
-  }
-  const page = pageSize(doc, 'letter')
-  const panel = page.h / 3
-  const inner = {
-    x: next.x + doc.insert.left,
-    y: next.y + doc.insert.top - panel * doc.insert.panel,
-    w: next.w,
-    h: next.h,
-  }
+function placeWindowFromInner(doc: MailDoc, role: Role, inner: Box) {
   doc.windows[role] = {
     x: inner.x - 4,
     y: inner.y - 4,
@@ -84,6 +76,25 @@ export function writeAddressFrame(doc: MailDoc, role: Role, surface: SurfaceId, 
     h: Math.max(10, inner.h + 8),
   }
   doc.windowShift[role] = { x: 0, y: 0 }
+}
+
+export function writeAddressFrame(doc: MailDoc, role: Role, surface: SurfaceId, next: Box) {
+  if (!hasWindow(doc, role)) {
+    doc[role].frame = { ...next }
+    return
+  }
+  if (surface === 'letter') {
+    const page = pageSize(doc, 'letter')
+    const panel = page.h / 3
+    placeWindowFromInner(doc, role, {
+      x: next.x + doc.insert.left,
+      y: next.y + doc.insert.top - panel * doc.insert.panel,
+      w: next.w,
+      h: next.h,
+    })
+    return
+  }
+  placeWindowFromInner(doc, role, next)
 }
 
 export function intersects(a: Box, b: Box) {
