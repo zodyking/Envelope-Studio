@@ -79,7 +79,7 @@ function buildStudio() {
   const editingId = ref<string | null>(null)
   const ribbon = ref('home')
   const backstage = ref<string | null>(null)
-  const dialog = ref<null | 'setup' | 'postage' | 'batch'>(null)
+  const dialog = ref<null | 'setup' | 'postage' | 'batch' | 'print'>(null)
   const zoom = ref<number | null>(null)
   const scale = ref(1)
   const rulers = ref(true)
@@ -625,13 +625,7 @@ function buildStudio() {
     })))
     await nextTick()
     await new Promise(resolve => requestAnimationFrame(() => resolve(null)))
-    const back = surfaces.includes('letterBack')
-    toast(test
-      ? 'Print the alignment sheet at 100%.'
-      : windowed
-        ? `Printing the letter${back ? ' and its back' : ''}. Use Actual Size / 100%. Turn off headers and scaling.`
-        : 'Print at Actual Size / 100%. Turn off headers and scaling.')
-    window.print()
+    dialog.value = 'print'
   }
 
   async function exportPdf(pair = false) {
@@ -748,7 +742,7 @@ function buildStudio() {
     }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'p') {
       event.preventDefault()
-      backstage.value = 'print'
+      void printCurrent(false)
       return
     }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
@@ -795,7 +789,10 @@ function buildStudio() {
   if (typeof window !== 'undefined' && !keysBound) {
     keysBound = true
     window.addEventListener('keydown', onKey)
-    window.addEventListener('afterprint', () => { printJob.value = [] })
+    window.addEventListener('afterprint', () => {
+      printJob.value = []
+      if (dialog.value === 'print') dialog.value = null
+    })
     try {
       const pref = JSON.parse(localStorage.getItem('envelope-office-ui') || '{}') as { rulersOff?: boolean; paneOff?: boolean; ribbonCollapsed?: boolean }
       if (pref.rulersOff) rulers.value = false

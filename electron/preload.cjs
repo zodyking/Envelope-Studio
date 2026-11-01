@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld('envelopeDesktop', {
   openFile: () => ipcRenderer.invoke('open-file'),
   loadAuto: () => ipcRenderer.invoke('load-auto'),
   saveAuto: (content) => ipcRenderer.invoke('save-auto', content),
+  listPrinters: () => ipcRenderer.invoke('list-printers'),
+  printDocument: (options) => ipcRenderer.invoke('print-document', options),
 })

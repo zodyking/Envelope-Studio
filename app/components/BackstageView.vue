@@ -56,7 +56,7 @@ async function openDesktop() {
       <section v-show="backstage === 'print'">
         <h1>Print</h1>
         <button type="button" class="bs-print" @click="studio.printCurrent(false)"><svg class="icon lg" aria-hidden="true"><use href="#i-print" /></svg>Print</button>
-        <p class="bs-note">A window envelope prints the letter. The back is added when it has artwork, a page color, or fold guides. Print at Actual Size / 100%.</p>
+        <p class="bs-note">A window envelope prints the letter. The back is added when it has artwork, a page color, or fold guides. The preview shows each page before it is sent.</p>
         <button type="button" class="bs-action" @click="studio.printCurrent(true)">Print alignment test</button>
       </section>
       <section v-show="backstage === 'export'">
