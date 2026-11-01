@@ -240,7 +240,7 @@ async function onImage(event: Event) {
           <p><strong>Postage</strong>Mailings, Postage. Barcode keeps the code and the lines under it. Whole stamp joins the mark beside it. The page header is ignored.</p>
           <p><strong>Addresses</strong>The recipient and return address are one field. Edit them on the envelope or on the letter and both views stay in step.</p>
           <p><strong>Back flap</strong>On Layout, pick Commercial, Square, Pointed, or Contour. The outline is the seal flap only. It is not printed.</p>
-          <p><strong>Print</strong>The preview shows each page, then the app sends it at actual size with no header or footer. Ctrl+S saves. Ctrl+Z undoes.</p>
+          <p><strong>Print</strong>The preview uses the same sheet as the page in the studio and sends it at 100%. Choose one-sided or both sides in that window. Ctrl+S saves. Ctrl+Z undoes.</p>
         </div>
       </div>
     </div>

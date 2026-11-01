@@ -13,6 +13,36 @@ export function isLetter(surface: SurfaceId) {
   return surface === 'letter' || surface === 'letterBack'
 }
 
+export interface PrintPaper {
+  id: 'Letter' | 'A4' | 'custom'
+  name: string
+  widthMm: number
+  heightMm: number
+  landscape: boolean
+  widthMicrons: number
+  heightMicrons: number
+}
+
+/** The physical sheet. Letter and A4 use the printer's real paper, at the same size as the page in the studio. */
+export function printPaper(doc: MailDoc, surface: SurfaceId): PrintPaper {
+  const size = pageSize(doc, surface)
+  if (isLetter(surface)) {
+    if (doc.insert.sheet === 'a4') {
+      return { id: 'A4', name: 'A4', widthMm: 210, heightMm: 297, landscape: false, widthMicrons: 210000, heightMicrons: 297000 }
+    }
+    return { id: 'Letter', name: 'US Letter', widthMm: 215.9, heightMm: 279.4, landscape: false, widthMicrons: 215900, heightMicrons: 279400 }
+  }
+  return {
+    id: 'custom',
+    name: 'Envelope',
+    widthMm: size.w,
+    heightMm: size.h,
+    landscape: false,
+    widthMicrons: Math.round(size.w * 1000),
+    heightMicrons: Math.round(size.h * 1000),
+  }
+}
+
 /** A window envelope prints the letter. The back is included only when it carries ink. */
 export function letterBackNeeded(doc: MailDoc) {
   if (doc.foldGuides === 'back') return true
