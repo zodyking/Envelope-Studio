@@ -138,18 +138,40 @@ ipcMain.handle('list-printers', async (event) => {
 
 ipcMain.handle('print-document', (event, options) => {
   const copies = Math.max(1, Math.min(99, Math.round(Number(options?.copies) || 1)))
-  const width = Math.max(1000, Math.round(Number(options?.widthMicrons) || 215900))
-  const height = Math.max(1000, Math.round(Number(options?.heightMicrons) || 279400))
+  const duplexMode = ['simplex', 'shortEdge', 'longEdge'].includes(options?.duplexMode) ? options.duplexMode : 'simplex'
+  const paper = options?.paper === 'A4' || options?.paper === 'Letter' ? options.paper : 'custom'
+  const pageSize = paper === 'custom'
+    ? {
+        width: Math.max(1000, Math.round(Number(options?.widthMicrons) || 215900)),
+        height: Math.max(1000, Math.round(Number(options?.heightMicrons) || 279400)),
+      }
+    : paper
+  const ranges = Array.isArray(options?.pageRanges)
+    ? options.pageRanges
+        .map(range => ({
+          from: Math.max(0, Math.round(Number(range?.from) || 0)),
+          to: Math.max(0, Math.round(Number(range?.to) || 0)),
+        }))
+        .filter(range => range.to >= range.from)
+    : []
+  const settings = {
+    silent: true,
+    printBackground: true,
+    deviceName: options?.deviceName || '',
+    copies,
+    color: options?.color !== false,
+    collate: options?.collate !== false,
+    duplexMode,
+    landscape: !!options?.landscape,
+    margins: { marginType: 'none' },
+    scaleFactor: 100,
+    pageSize,
+    header: '',
+    footer: '',
+  }
+  if (ranges.length) settings.pageRanges = ranges
   return new Promise((resolve) => {
-    event.sender.print({
-      silent: true,
-      printBackground: true,
-      deviceName: options?.deviceName || '',
-      copies,
-      color: true,
-      margins: { marginType: 'none' },
-      pageSize: { width, height },
-    }, (success, failureReason) => {
+    event.sender.print(settings, (success, failureReason) => {
       resolve({ success: !!success, failureReason: failureReason || '' })
     })
   })

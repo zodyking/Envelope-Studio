@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { SURFACE_LABEL } from '~/lib/constants'
-import { pageSize } from '~/lib/geometry'
+import { ENVELOPE_SIZES, SURFACE_LABEL } from '~/lib/constants'
+import { pageSize, printPaper } from '~/lib/geometry'
 import { useStudio } from '~/composables/useStudio'
 import type { PrintPage } from '~/composables/useStudio'
 
@@ -12,17 +12,31 @@ const scale = ref(0.45)
 const printers = ref<{ name: string; displayName: string }[]>([])
 const printer = ref('')
 const copies = ref(1)
+const sides = ref<'simplex' | 'shortEdge' | 'longEdge'>('simplex')
+const colorMode = ref<'color' | 'gray'>('color')
+const collate = ref(true)
+const pageMode = ref<'all' | 'range'>('all')
+const rangeFrom = ref(1)
+const rangeTo = ref(1)
 const busy = ref(false)
 const status = ref('')
 const desktop = typeof window !== 'undefined' && !!window.envelopeDesktop?.printDocument
 let observer: ResizeObserver | null = null
 
-const page = computed(() => pageSize(doc.value, printJob.value[0]?.surface || 'letter'))
+const paper = computed(() => printPaper(doc.value, printJob.value[0]?.surface || 'letter'))
+const paperName = computed(() => {
+  if (paper.value.id !== 'custom') return paper.value.name
+  return ENVELOPE_SIZES.find(item => item.id === doc.value.sizeId)?.name || 'Custom paper'
+})
 const pageCount = computed(() => printJob.value.length)
+const sizeLine = computed(() => {
+  const inches = `${(paper.value.widthMm / 25.4).toFixed(2)} × ${(paper.value.heightMm / 25.4).toFixed(2)} in`
+  return `${paper.value.widthMm.toFixed(1)} × ${paper.value.heightMm.toFixed(1)} mm · ${inches}`
+})
 
 function fit() {
   const width = stage.value?.clientWidth || 640
-  const pagePx = page.value.w * 3.7795275591
+  const pagePx = paper.value.widthMm * 3.7795275591
   scale.value = Math.min(1, Math.max(0.2, (width - 48) / pagePx))
 }
 
@@ -53,6 +67,10 @@ async function send() {
   if (busy.value) return
   const count = Math.max(1, Math.min(99, Math.round(Number(copies.value) || 1)))
   copies.value = count
+  const from = Math.max(1, Math.min(pageCount.value, Math.round(Number(rangeFrom.value) || 1)))
+  const to = Math.max(from, Math.min(pageCount.value, Math.round(Number(rangeTo.value) || from)))
+  rangeFrom.value = from
+  rangeTo.value = to
   if (!desktop) {
     window.print()
     return
@@ -63,8 +81,14 @@ async function send() {
     const result = await window.envelopeDesktop!.printDocument({
       deviceName: printer.value,
       copies: count,
-      widthMicrons: Math.round(page.value.w * 1000),
-      heightMicrons: Math.round(page.value.h * 1000),
+      paper: paper.value.id,
+      widthMicrons: paper.value.widthMicrons,
+      heightMicrons: paper.value.heightMicrons,
+      landscape: paper.value.landscape,
+      duplexMode: sides.value,
+      color: colorMode.value === 'color',
+      collate: collate.value,
+      pageRanges: pageMode.value === 'range' ? [{ from: from - 1, to: to - 1 }] : undefined,
     })
     if (!result.success) {
       status.value = result.failureReason === 'Print job canceled'
@@ -91,6 +115,7 @@ onMounted(async () => {
   try {
     printers.value = await window.envelopeDesktop!.listPrinters()
     printer.value = printers.value[0]?.name || ''
+    rangeTo.value = pageCount.value
     if (!printers.value.length) status.value = 'No printer is installed.'
   } catch {
     status.value = 'The printer list could not be read.'
@@ -134,9 +159,34 @@ onBeforeUnmount(() => observer?.disconnect())
           <template v-if="desktop">
             <label class="input-label" for="print-copies">Copies</label>
             <input id="print-copies" v-model.number="copies" type="number" min="1" max="99" :disabled="busy">
+            <label class="input-label" for="print-sides">Sides</label>
+            <select id="print-sides" v-model="sides" :disabled="busy">
+              <option value="simplex">One-sided</option>
+              <option value="longEdge">Both sides, flip on the long edge</option>
+              <option value="shortEdge">Both sides, flip on the short edge</option>
+            </select>
+            <label class="input-label" for="print-color">Color</label>
+            <select id="print-color" v-model="colorMode" :disabled="busy">
+              <option value="color">Color</option>
+              <option value="gray">Black and white</option>
+            </select>
+            <label class="print-check" for="print-collate"><input id="print-collate" v-model="collate" type="checkbox" :disabled="busy">Collate copies</label>
+            <label class="input-label" for="print-pages">Pages</label>
+            <select id="print-pages" v-model="pageMode" :disabled="busy || pageCount < 2">
+              <option value="all">All pages</option>
+              <option value="range">Page range</option>
+            </select>
+            <div v-if="pageMode === 'range'" class="print-range">
+              <input v-model.number="rangeFrom" type="number" min="1" :max="pageCount" aria-label="First page" :disabled="busy">
+              <span>to</span>
+              <input v-model.number="rangeTo" type="number" min="1" :max="pageCount" aria-label="Last page" :disabled="busy">
+            </div>
           </template>
-          <p class="print-meta">{{ pageCount }} page{{ pageCount === 1 ? '' : 's' }} · {{ page.w.toFixed(1) }} × {{ page.h.toFixed(1) }} mm</p>
-          <p class="print-meta">Sent at actual size, with no header or footer.</p>
+          <div class="print-paper">
+            <strong>{{ paperName }}</strong>
+            <span>{{ sizeLine }}</span>
+          </div>
+          <p class="print-meta">{{ pageCount }} page{{ pageCount === 1 ? '' : 's' }}. Same sheet as the page in the studio, at 100%, with no header or footer.</p>
           <p v-if="status" class="print-status" role="status">{{ status }}</p>
           <button type="button" class="button primary full" :disabled="busy || (desktop && !printer)" @click="send">{{ busy ? 'Printing…' : 'Print' }}</button>
           <button type="button" class="button full" :disabled="busy" @click="close">Cancel</button>

@@ -5,7 +5,7 @@ import { addressFromRow, parseCSV } from '~/lib/csv'
 import { loadDoc, normalize, saveDoc } from '~/lib/document'
 import { transformHtml } from '~/lib/editor'
 import { downloadBlob, downscale, fileToData } from '~/lib/files'
-import { addressFrame, hasWindow, isLetter, pageSize, pagesToPrint, resizeBox, showsAddress, writeAddressFrame } from '~/lib/geometry'
+import { addressFrame, hasWindow, isLetter, pageSize, pagesToPrint, printPaper, resizeBox, showsAddress, writeAddressFrame } from '~/lib/geometry'
 import { buildPdf } from '~/lib/pdfExport'
 import { layoutWarnings, recipientPlain } from '~/lib/postal'
 import { asAlign, htmlToPlain, plainToHtml, safeHex } from '~/lib/text'
@@ -590,13 +590,9 @@ function buildStudio() {
   }
 
   function setPageRule(width: number, height: number) {
-    let style = document.getElementById('print-page-rule')
-    if (!style) {
-      style = document.createElement('style')
-      style.id = 'print-page-rule'
-      document.head.appendChild(style)
-    }
-    style.textContent = `@page{size:${width}mm ${height}mm;margin:0}`
+    const root = document.documentElement
+    root.style.setProperty('--print-page-w', `${width}mm`)
+    root.style.setProperty('--print-page-h', `${height}mm`)
   }
 
   async function printCurrent(test = false) {
@@ -616,8 +612,8 @@ function buildStudio() {
       return
     }
     endEdit()
-    const page = pageSize(doc.value, surfaces[0] ?? 'letter')
-    setPageRule(page.w, page.h)
+    const page = printPaper(doc.value, surfaces[0] ?? 'letter')
+    setPageRule(page.widthMm, page.heightMm)
     printJob.value = people.flatMap(person => surfaces.map(surface => ({
       surface,
       recipientPlain: test ? null : person,

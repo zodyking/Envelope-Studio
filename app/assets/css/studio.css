@@ -242,14 +242,21 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .drawer { width: min(720px, 100%); max-height: min(88vh, 860px); background: #fff; border-radius: 8px; box-shadow: 0 25px 60px rgba(0, 0, 0, .28); display: flex; flex-direction: column; overflow: hidden }
 .drawer.wide { width: min(920px, 100%) }
 .print-desk { width: min(1080px, 100%); height: min(86vh, 780px) }
-.print-desk-body { display: grid; grid-template-columns: minmax(0, 1fr) 260px; min-height: 0; flex: 1 }
+.print-desk-body { display: grid; grid-template-columns: minmax(0, 1fr) 288px; min-height: 0; flex: 1 }
 .print-stage { min-height: 0; overflow: auto; background: #f3f2f1; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px }
 .print-figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px }
 .print-figure figcaption { color: var(--muted); font-size: 12px }
 .print-frame { position: relative }
 .print-page { position: absolute; left: 0; top: 0; transform-origin: top left; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .18) }
 .print-side { min-height: 0; overflow: auto; padding: 8px 16px 16px; border-left: 1px solid var(--line); background: #fff }
-.print-side select, .print-side input { width: 100%; min-height: 32px; margin-top: 4px; padding: 4px 8px; border: 1px solid var(--input); border-radius: 4px; background: #fff }
+.print-side select, .print-side input[type="number"] { width: 100%; min-height: 32px; margin-top: 4px; padding: 4px 8px; border: 1px solid var(--input); border-radius: 4px; background: #fff }
+.print-paper { margin: 12px 0 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #faf9f8 }
+.print-paper strong { display: block; font-size: 13px }
+.print-paper span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.4 }
+.print-check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 600; min-height: 32px }
+.print-check input { width: 16px; height: 16px; margin: 0 }
+.print-range { display: flex; align-items: center; gap: 8px; margin-top: 8px }
+.print-range input { flex: 1; width: auto; margin-top: 0 }
 .print-meta, .print-system { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45 }
 .print-status { margin: 12px 0 0; color: var(--warn); font-size: 12px; line-height: 1.45 }
 .drawer-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center }
@@ -320,9 +327,16 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
 @media print {
-  @page { margin: 0 }
-  html, body, #__nuxt { background: #fff !important; height: auto !important; overflow: visible !important }
+  @page { size: var(--print-page-w, 215.9mm) var(--print-page-h, 279.4mm); margin: 0; }
+  html, body, #__nuxt { background: #fff !important; height: auto !important; overflow: visible !important; margin: 0 !important; }
   .app { display: none !important }
   #printHost { display: block !important }
+  .print-sheet {
+    box-sizing: border-box;
+    width: var(--print-page-w, 215.9mm) !important;
+    height: var(--print-page-h, 279.4mm) !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
   .print-sheet:last-child { break-after: auto; page-break-after: auto }
 }
