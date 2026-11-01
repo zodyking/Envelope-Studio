@@ -1,6 +1,6 @@
 # Envelope Studio
 
-Design a window envelope and print the letter at actual size. Fold guides can sit on the front or the back of the letter.
+Design a regular envelope, or a window envelope that prints the letter at actual size. Fold guides can sit on the front or the back of the letter.
 
 <p align="center">
   <a href="https://github.com/zodyking/Envelope-Studio/releases/latest/download/Envelope-Studio.exe">
@@ -9,7 +9,11 @@ Design a window envelope and print the letter at actual size. Fold guides can si
 </p>
 
 <p align="center">
-  <img src="preview.png" alt="Envelope Studio showing a letter with front fold guides" width="960">
+  <img src="preview.png" alt="Envelope Studio showing a regular envelope" width="960">
+</p>
+
+<p align="center">
+  <img src="preview-letter.png" alt="Letter view with front fold guides" width="960">
 </p>
 
 Portable app for Windows 10 or later. No installer. In the print dialog, choose Actual size and turn off headers.
