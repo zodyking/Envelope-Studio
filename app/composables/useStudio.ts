@@ -1,4 +1,5 @@
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+import { alignOnPage, alignToPeer, type PageAlign, type PeerAlign } from '~/lib/align'
 import type { Editor } from '@tiptap/core'
 import { DEFAULT_FRAMES, DEFAULT_WINDOWS, ENVELOPE_SIZES, SURFACE_LABEL, textStyle, uid } from '~/lib/constants'
 import { addressFromRow, parseCSV } from '~/lib/csv'
@@ -102,6 +103,7 @@ function buildStudio() {
   const past = ref<string[]>([])
   const future = ref<string[]>([])
   const live = shallowRef<Editor | null>(null)
+  const objectMenu = ref<null | { x: number; y: number; id: string }>(null)
   const rev = ref(0)
   let toastTimer = 0
   let saveTimer = 0
@@ -207,7 +209,23 @@ function buildStudio() {
 
   function select(id: string | null) {
     if (editingId.value && editingId.value !== id) endEdit()
+    if (!id || objectMenu.value?.id !== id) objectMenu.value = null
     selection.value = id
+  }
+
+  function openObjectMenu(id: string, x: number, y: number) {
+    select(id)
+    const width = 240
+    const height = 420
+    objectMenu.value = {
+      id,
+      x: Math.max(8, Math.min(x, window.innerWidth - width - 8)),
+      y: Math.max(8, Math.min(y, window.innerHeight - height - 8)),
+    }
+  }
+
+  function closeObjectMenu() {
+    objectMenu.value = null
   }
 
   function beginEdit(id: string) {
@@ -804,6 +822,7 @@ function buildStudio() {
     const typing = document.activeElement?.matches('input, textarea, select, [contenteditable="true"]')
     const inEditor = !!document.activeElement?.closest('.ProseMirror')
     if (event.key === 'Escape') {
+      if (objectMenu.value) { objectMenu.value = null; return }
       if (dialog.value) { dialog.value = null; return }
       if (backstage.value) { backstage.value = null; return }
       if (editingId.value) { endEdit(); return }
@@ -884,6 +903,46 @@ function buildStudio() {
     }))
   })
 
+  function surfaceObjects(except?: string | null) {
+    const surface = doc.value.view
+    const rows: { id: string; name: string; frame: Box }[] = []
+    const push = (id: string, name: string) => {
+      if (id !== except) rows.push({ id, name, frame: frameOf(id) })
+    }
+    if (surface === 'envelope' && doc.value.stamp) push('stamp', doc.value.stamp.name || 'Postage')
+    for (const role of ['recipient', 'sender'] as Role[]) {
+      if (showsAddress(doc.value, role, surface)) push(role, role === 'recipient' ? 'Recipient' : 'Return address')
+      if (surface === 'envelope' && hasWindow(doc.value, role)) push(`window:${role}`, `${role === 'recipient' ? 'Recipient' : 'Return'} window`)
+    }
+    for (const item of doc.value.surfaces[surface].items) {
+      const preview = item.type === 'text' ? htmlToPlain(item.html || '').replace(/\s+/g, ' ').trim() : ''
+      const name = item.type === 'image'
+        ? (item.name || 'Picture')
+        : item.type === 'text'
+          ? (preview.slice(0, 28) || 'Text box')
+          : item.type === 'line'
+            ? 'Line'
+            : 'Rectangle'
+      push(item.id, name)
+    }
+    return rows
+  }
+
+  function alignSelection(how: PageAlign) {
+    const id = selection.value
+    if (!id) return
+    const frame = frameOf(id)
+    setFrame(id, alignOnPage(frame, pageSize(doc.value), how))
+    objectMenu.value = null
+  }
+
+  function alignSelectionTo(targetId: string, how: PeerAlign) {
+    const id = selection.value
+    if (!id || id === targetId) return
+    setFrame(id, alignToPeer(frameOf(id), frameOf(targetId), how))
+    objectMenu.value = null
+  }
+
   const warnings = computed(() => layoutWarnings(doc.value))
   const selectionKind = computed(() => {
     const id = selection.value
@@ -921,6 +980,7 @@ function buildStudio() {
     doc,
     selection,
     editingId,
+    objectMenu,
     ribbon,
     backstage,
     dialog,
@@ -956,6 +1016,11 @@ function buildStudio() {
     frameOf,
     setFrame,
     select,
+    openObjectMenu,
+    closeObjectMenu,
+    surfaceObjects,
+    alignSelection,
+    alignSelectionTo,
     beginEdit,
     endEdit,
     attachEditor,

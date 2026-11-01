@@ -35,6 +35,7 @@ function sheetStyle(page: PrintPage) {
           </div>
           <StageCanvas />
           <ContextBar />
+          <ObjectMenu />
         </main>
       </div>
     </div>
