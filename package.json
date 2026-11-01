@@ -1,6 +1,7 @@
 {
   "name": "envelope-studio",
   "version": "4.1.0",
+  "author": "Zody King",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
