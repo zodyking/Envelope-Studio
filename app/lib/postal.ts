@@ -1,4 +1,4 @@
-import { hasWindow, intersects, pageSize } from './geometry'
+import { hasWindow, intersects, letterFold } from './geometry'
 import { htmlToPlain, postalPlain } from './text'
 import type { Box, MailDoc, Role } from './types'
 
@@ -47,9 +47,10 @@ export function layoutWarnings(doc: MailDoc, recipient = recipientPlain(doc)) {
   }
 
   if (doc.style !== 'plain') {
-    const letter = pageSize(doc, 'letter')
-    if (letter.h / 3 > doc.h - 3) warnings.push('A folded letter is taller than this envelope')
-    if (letter.w > doc.w - 3) warnings.push('The letter is wider than the envelope')
+    const fold = letterFold(doc)
+    if (!fold.fitsHeight) warnings.push('A folded letter is taller than this envelope')
+    if (!fold.fitsWidth) warnings.push('The letter is wider than the envelope')
+    if (!fold.windowsFit) warnings.push('A window sits outside the folded letter')
   }
   return [...new Set(warnings)]
 }

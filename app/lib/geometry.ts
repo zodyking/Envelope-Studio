@@ -61,6 +61,71 @@ export function hasWindow(doc: MailDoc, role: Role) {
   return doc.style === 'double' || (doc.style === 'single' && role === 'recipient')
 }
 
+const INSERT_CLEARANCE = 2
+
+function roundMm(value: number) {
+  return Math.round(value * 100) / 100
+}
+
+export interface FoldCrease {
+  y: number
+  label: string
+}
+
+export interface LetterFold {
+  face: number
+  side: number
+  seat: number
+  creases: FoldCrease[]
+  fitsHeight: boolean
+  fitsWidth: boolean
+  windowsFit: boolean
+}
+
+/** Two creases that make the sheet fit the envelope, with the top face outside and right-side up. */
+export function letterFold(doc: MailDoc): LetterFold {
+  const letter = pageSize(doc, 'letter')
+  const face = roundMm(Math.min(letter.h, Math.max(letter.h / 3, doc.h - INSERT_CLEARANCE)))
+  const creases: FoldCrease[] = []
+  if (letter.h - face > 0.4) {
+    const bottom = roundMm((face + letter.h) / 2)
+    creases.push({ y: bottom, label: `1  Fold the bottom up at ${bottom.toFixed(2)} mm` })
+    creases.push({ y: face, label: `2  Fold the top down at ${face.toFixed(2)} mm` })
+  }
+  const side = roundMm((doc.w - letter.w) / 2)
+  const slack = roundMm(doc.h - face)
+  const windows = (['recipient', 'sender'] as Role[]).filter(role => hasWindow(doc, role)).map(role => doc.windows[role])
+  const centered = roundMm(Math.max(0, slack / 2))
+  let seat = slack < 0 ? 0 : centered
+  let windowsFit = true
+  if (windows.length) {
+    const top = Math.min(...windows.map(box => box.y))
+    const bottom = Math.max(...windows.map(box => box.y + box.h))
+    const spanFits = bottom - top <= face + 0.05
+    const targets = spanFits ? windows : [windows[0]!]
+    const bandTop = Math.min(...targets.map(box => box.y))
+    const bandBottom = Math.max(...targets.map(box => box.y + box.h))
+    if (slack >= -0.05) {
+      const low = Math.max(0, roundMm(bandBottom - face))
+      const high = Math.min(Math.max(0, slack), bandTop)
+      if (low <= high + 0.05) seat = roundMm(Math.min(high, Math.max(low, centered)))
+      else windowsFit = false
+    }
+    if (!spanFits) windowsFit = false
+    if (windows.some(box => box.y < seat - 0.05 || box.y + box.h > seat + face + 0.05)) windowsFit = false
+    if (windows.some(box => box.x < side - 0.05 || box.x + box.w > side + letter.w + 0.05)) windowsFit = false
+  }
+  return {
+    face,
+    side,
+    seat,
+    creases,
+    fitsHeight: face <= doc.h + 0.05,
+    fitsWidth: letter.w <= doc.w + 0.05,
+    windowsFit,
+  }
+}
+
 /** The address field on screen. A windowed address is the same field on the envelope and the letter. */
 export function showsAddress(doc: MailDoc, role: Role, surface: SurfaceId) {
   if (surface === 'letter') return hasWindow(doc, role)
@@ -86,11 +151,10 @@ export function addressFrame(doc: MailDoc, role: Role, surface: SurfaceId): Box 
     h: Math.max(6, box.h - 8),
   }
   if (surface === 'letter') {
-    const page = pageSize(doc, 'letter')
-    const panel = page.h / 3
+    const fold = letterFold(doc)
     return {
-      x: inner.x - doc.insert.left,
-      y: inner.y - doc.insert.top + panel * doc.insert.panel,
+      x: inner.x - fold.side,
+      y: inner.y - fold.seat,
       w: inner.w,
       h: inner.h,
     }
@@ -114,11 +178,10 @@ export function writeAddressFrame(doc: MailDoc, role: Role, surface: SurfaceId, 
     return
   }
   if (surface === 'letter') {
-    const page = pageSize(doc, 'letter')
-    const panel = page.h / 3
+    const fold = letterFold(doc)
     placeWindowFromInner(doc, role, {
-      x: next.x + doc.insert.left,
-      y: next.y + doc.insert.top - panel * doc.insert.panel,
+      x: next.x + fold.side,
+      y: next.y + fold.seat,
       w: next.w,
       h: next.h,
     })

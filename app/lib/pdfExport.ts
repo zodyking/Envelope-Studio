@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib'
 import { PT } from './constants'
-import { addressFrame, isLetter, pageSize, printsAddress } from './geometry'
+import { addressFrame, isLetter, letterFold, pageSize, printsAddress } from './geometry'
 import { htmlToPlain, plainToHtml, postalHtml, postalPlain, safeHex } from './text'
 import type { Align, Box, MailDoc, Role, SurfaceId, TextStyle } from './types'
 
@@ -290,10 +290,10 @@ async function drawPage(pdf: PDFDocument, fonts: Map<string, PDFFont>, doc: Mail
     })
   }
 
-  if (isLetter(surface) && doc.foldGuides === (surface === 'letter' ? 'front' : 'back')) {
-    const [first, second] = [pageBox.h / 3, pageBox.h * 2 / 3]
-    for (const yMm of [first, second]) {
-      const y = (pageBox.h - yMm) * PT
+  if (isLetter(surface) && doc.foldGuides === (surface === 'letter' ? 'front' : 'back') && doc.style !== 'plain') {
+    const font = await fontFor({ font: 'Arial', size: 8, color: '#6b8cae', bold: false, italic: false, underline: false })
+    for (const crease of letterFold(doc).creases) {
+      const y = (pageBox.h - crease.y) * PT
       page.drawLine({
         start: { x: 0, y },
         end: { x: pageBox.w * PT, y },
@@ -301,6 +301,7 @@ async function drawPage(pdf: PDFDocument, fonts: Map<string, PDFFont>, doc: Mail
         color: rgb(0.42, 0.55, 0.72),
         dashArray: [2, 3],
       })
+      page.drawText(crease.label, { x: 8 * PT, y: y - 9, size: 7, font, color: rgb(0.06, 0.33, 0.55) })
     }
   }
 }
