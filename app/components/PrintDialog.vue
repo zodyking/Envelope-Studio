@@ -6,7 +6,23 @@ import { useStudio } from '~/composables/useStudio'
 import type { PrintPage } from '~/composables/useStudio'
 
 const studio = useStudio()
-const { doc, printJob, dialog } = studio
+const { doc, printJob, printTarget, dialog } = studio
+const targets = computed(() => doc.value.style === 'plain'
+  ? [['envelope', 'Envelope front'], ['back', 'Envelope back'], ['envelopeBoth', 'Envelope front and back']] as const
+  : [['letter', 'Letter'], ['letterBoth', 'Letter front and back'], ['envelope', 'Envelope front'], ['back', 'Envelope back'], ['envelopeBoth', 'Envelope front and back']] as const)
+const isTest = computed(() => printJob.value.some(item => item.test))
+
+function chooseTarget(value: string) {
+  studio.setPrintTarget(value as typeof printTarget.value)
+  rangeFrom.value = 1
+  rangeTo.value = printJob.value.length
+  pageMode.value = 'all'
+  fit()
+}
+
+function savePdf() {
+  void studio.exportPdf(printTarget.value)
+}
 const stage = ref<HTMLElement | null>(null)
 const scale = ref(0.45)
 const printers = ref<{ name: string; displayName: string }[]>([])
@@ -151,6 +167,12 @@ onBeforeUnmount(() => observer?.disconnect())
           </figure>
         </div>
         <aside class="print-side">
+          <template v-if="!isTest">
+            <label class="input-label" for="print-what">Print</label>
+            <select id="print-what" :value="printTarget" :disabled="busy" @change="chooseTarget(($event.target as HTMLSelectElement).value)">
+              <option v-for="item in targets" :key="item[0]" :value="item[0]">{{ item[1] }}</option>
+            </select>
+          </template>
           <label class="input-label" for="print-printer">Printer</label>
           <select v-if="desktop" id="print-printer" v-model="printer" :disabled="!printers.length || busy">
             <option v-for="item in printers" :key="item.name" :value="item.name">{{ item.displayName }}</option>
@@ -186,9 +208,10 @@ onBeforeUnmount(() => observer?.disconnect())
             <strong>{{ paperName }}</strong>
             <span>{{ sizeLine }}</span>
           </div>
-          <p class="print-meta">{{ pageCount }} page{{ pageCount === 1 ? '' : 's' }}. Same sheet as the page in the studio, at 100%, with no header or footer.</p>
+          <p class="print-meta">{{ pageCount }} page{{ pageCount === 1 ? '' : 's' }}. Same sheet as the page in the studio, at 100%, with no header, footer, or margin. A printer’s own unprintable edge still clips ink there.</p>
           <p v-if="status" class="print-status" role="status">{{ status }}</p>
           <button type="button" class="button primary full" :disabled="busy || (desktop && !printer)" @click="send">{{ busy ? 'Printing…' : 'Print' }}</button>
+          <button v-if="!isTest" type="button" class="button full" :disabled="busy" @click="savePdf">Save as PDF</button>
           <button type="button" class="button full" :disabled="busy" @click="close">Cancel</button>
         </aside>
       </div>

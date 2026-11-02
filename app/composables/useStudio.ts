@@ -1,7 +1,7 @@
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import { alignOnPage, alignToPeer, type PageAlign, type PeerAlign } from '~/lib/align'
 import type { Editor } from '@tiptap/core'
-import { DEFAULT_FRAMES, DEFAULT_WINDOWS, ENVELOPE_SIZES, SURFACE_LABEL, textStyle, uid } from '~/lib/constants'
+import { DEFAULT_FRAMES, ENVELOPE_SIZES, SURFACE_LABEL, textStyle, uid, windowDefaults } from '~/lib/constants'
 import { addressFromRow, parseCSV } from '~/lib/csv'
 import { loadDoc, normalize, saveDoc } from '~/lib/document'
 import { transformHtml } from '~/lib/editor'
@@ -17,6 +17,8 @@ export interface PrintPage {
   recipientPlain: string | null
   test: boolean
 }
+
+export type PrintTarget = 'letter' | 'letterBoth' | 'envelope' | 'back' | 'envelopeBoth'
 
 const assets = new Map<string, string>()
 
@@ -100,6 +102,7 @@ function buildStudio() {
   const toastText = ref('')
   const savedLabel = ref('Saved on this PC')
   const printJob = ref<PrintPage[]>([])
+  const printTarget = ref<PrintTarget>('letter')
   const past = ref<string[]>([])
   const future = ref<string[]>([])
   const live = shallowRef<Editor | null>(null)
@@ -539,6 +542,16 @@ function buildStudio() {
 
   function setStyle(style: StyleId) {
     snapshot()
+    const before = windowDefaults(doc.value.style)
+    const after = windowDefaults(style)
+    for (const role of ['recipient', 'sender'] as Role[]) {
+      const current = doc.value.windows[role]
+      const untouched = (['x', 'y', 'w', 'h'] as const).every(key => Math.abs(current[key] - before[role][key]) < 0.01)
+      if (untouched) {
+        doc.value.windows[role] = { ...after[role] }
+        doc.value.windowShift[role] = { x: 0, y: 0 }
+      }
+    }
     doc.value.style = style
     if (style === 'plain' && isLetter(doc.value.view)) doc.value.view = 'envelope'
     selection.value = 'recipient'
@@ -605,12 +618,12 @@ function buildStudio() {
     snapshot()
     if (id === 'recipient' || id === 'sender') {
       if (hasWindow(doc.value, id)) {
-        doc.value.windows[id] = { ...DEFAULT_WINDOWS[id] }
+        doc.value.windows[id] = { ...windowDefaults(doc.value.style)[id] }
         doc.value.windowShift[id] = { x: 0, y: 0 }
       } else doc.value[id].frame = { ...DEFAULT_FRAMES[id] }
     } else if (id.startsWith('window:')) {
       const role = id.slice(7) as Role
-      doc.value.windows[role] = { ...DEFAULT_WINDOWS[role] }
+      doc.value.windows[role] = { ...windowDefaults(doc.value.style)[role] }
       doc.value.windowShift[role] = { x: 0, y: 0 }
     } else if (id === 'stamp' && doc.value.stamp) {
       doc.value.stamp.frame = { ...DEFAULT_FRAMES.stamp, w: doc.value.stamp.frame.w, h: doc.value.stamp.frame.h }
@@ -631,13 +644,44 @@ function buildStudio() {
     root.style.setProperty('--print-page-h', `${height}mm`)
   }
 
+  const PRINT_TARGETS: Record<PrintTarget, SurfaceId[]> = {
+    letter: ['letter'],
+    letterBoth: ['letter', 'letterBack'],
+    envelope: ['envelope'],
+    back: ['back'],
+    envelopeBoth: ['envelope', 'back'],
+  }
+
+  function defaultPrintTarget(): PrintTarget {
+    if (doc.value.style === 'plain') return doc.value.view === 'back' ? 'back' : 'envelope'
+    return pagesToPrint(doc.value).length > 1 ? 'letterBoth' : 'letter'
+  }
+
+  function printSurfaces(target: PrintTarget): SurfaceId[] | null {
+    const surfaces = PRINT_TARGETS[target]
+    if (surfaces.some(isLetter) && doc.value.style === 'plain') {
+      toast('Choose a window envelope before printing a letter')
+      return null
+    }
+    return surfaces
+  }
+
+  function setPrintTarget(target: PrintTarget) {
+    const surfaces = printSurfaces(target)
+    if (!surfaces) return
+    printTarget.value = target
+    const page = printPaper(doc.value, surfaces[0]!)
+    setPageRule(page.widthMm, page.heightMm)
+    const people = mailingAddresses()
+    printJob.value = people.flatMap(person => surfaces.map(surface => ({ surface, recipientPlain: person, test: false })))
+  }
+
   async function printCurrent(test = false) {
     const windowed = doc.value.style !== 'plain'
-    const surfaces: SurfaceId[] = test && windowed ? ['letter'] : pagesToPrint(doc.value)
-    if (surfaces.some(isLetter) && !windowed) {
-      toast('Choose a window envelope before printing a letter')
-      return
-    }
+    const target = test ? (windowed ? 'letter' : 'envelope') : defaultPrintTarget()
+    const surfaces = printSurfaces(target)
+    if (!surfaces) return
+    printTarget.value = target
     const people = test ? [''] : mailingAddresses()
     if (!test && people.some(item => !item.trim())) {
       toast('Enter a recipient address')
@@ -660,27 +704,27 @@ function buildStudio() {
     dialog.value = 'print'
   }
 
-  async function exportPdf(pair = false) {
+  async function exportPdf(pair: boolean | PrintTarget = false) {
     const windowed = doc.value.style !== 'plain'
-    if (!windowed && isLetter(doc.value.view)) {
-      toast('Choose a window envelope before exporting a letter')
-      return
-    }
+    const target: PrintTarget = typeof pair === 'string'
+      ? pair
+      : pair
+        ? (windowed ? 'letterBoth' : 'envelopeBoth')
+        : defaultPrintTarget()
+    const surfaces = printSurfaces(target)
+    if (!surfaces) return
     const people = mailingAddresses()
     if (people.some(item => !item.trim())) {
       toast('Enter a recipient address')
       return
     }
-    const surfaces: SurfaceId[] = pair
-      ? (windowed ? ['letter', 'letterBack'] : ['envelope', 'back'])
-      : pagesToPrint(doc.value)
     if (doc.value.stamp && people.length > 1 && surfaces.includes('envelope')) {
       toast('One purchased stamp cannot be copied across a mailing list')
       return
     }
     try {
       const bytes = await buildPdf(doc.value, surfaces, people)
-      downloadBlob(`envelope-${pair ? 'both-sides' : surfaces.join('-')}.pdf`, new Blob([bytes.slice()], { type: 'application/pdf' }))
+      downloadBlob(`envelope-${surfaces.join('-')}.pdf`, new Blob([bytes.slice()], { type: 'application/pdf' }))
       toast(`Saved ${people.length * surfaces.length} PDF page${people.length * surfaces.length === 1 ? '' : 's'}`)
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Could not build the PDF')
@@ -992,6 +1036,8 @@ function buildStudio() {
     toastText,
     savedLabel,
     printJob,
+    printTarget,
+    setPrintTarget,
     fontState,
     warnings,
     selectionKind,

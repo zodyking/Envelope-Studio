@@ -85,12 +85,15 @@ export interface LetterFold {
 /** Two creases that make the sheet fit the envelope, with the top face outside and right-side up. */
 export function letterFold(doc: MailDoc): LetterFold {
   const letter = pageSize(doc, 'letter')
-  const face = roundMm(Math.min(letter.h, Math.max(letter.h / 3, doc.h - INSERT_CLEARANCE)))
+  const third = letter.h / 3
+  const room = doc.h - INSERT_CLEARANCE
+  // Equal thirds whenever they fit. Only a short envelope forces a taller outside panel.
+  const face = roundMm(third <= room ? third : Math.min(letter.h, Math.max(third, room)))
   const creases: FoldCrease[] = []
   if (letter.h - face > 0.4) {
     const bottom = roundMm((face + letter.h) / 2)
     creases.push({ y: bottom, label: `1  Fold the bottom up at ${bottom.toFixed(2)} mm` })
-    creases.push({ y: face, label: `2  Fold the top down at ${face.toFixed(2)} mm` })
+    creases.push({ y: face, label: `2  Fold the top back at ${face.toFixed(2)} mm, print facing out` })
   }
   const side = roundMm((doc.w - letter.w) / 2)
   const slack = roundMm(doc.h - face)
