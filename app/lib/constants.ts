@@ -47,9 +47,20 @@ export const SURFACE_LABEL: Record<SurfaceId, string> = {
   letterBack: 'Letter back',
 }
 
+/** Single-window #10: 4½ × 1⅛ in window, ⅞ in from the left, ½ in from the bottom. */
 export const DEFAULT_WINDOWS: Record<'recipient' | 'sender', Box> = {
   recipient: { x: 22.2, y: 63.5, w: 114.3, h: 28.6 },
   sender: { x: 12.7, y: 12.7, w: 63.5, h: 19.05 },
+}
+
+/** Double-window #10 (Columbian, QuickBooks): top 3½ × 1 in at ½ in, ⅝ in; bottom 4 × 1⅛ in at ½ in, 2¼ in. */
+export const DOUBLE_WINDOWS: Record<'recipient' | 'sender', Box> = {
+  recipient: { x: 12.7, y: 57.15, w: 101.6, h: 28.575 },
+  sender: { x: 12.7, y: 15.875, w: 88.9, h: 25.4 },
+}
+
+export function windowDefaults(style: string): Record<'recipient' | 'sender', Box> {
+  return style === 'double' ? DOUBLE_WINDOWS : DEFAULT_WINDOWS
 }
 
 export const DEFAULT_FRAMES: Record<'recipient' | 'sender' | 'stamp', Box> = {
